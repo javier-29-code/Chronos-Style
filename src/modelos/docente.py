@@ -3,10 +3,10 @@ from modelos.usuario import Usuario
 
 class Docente(Usuario):
 
-    def __init__(self, nombre, correo, contrasena, codigo_docente, especialidad):
+    def __init__(self, nombre, correo, contrasena, codigo_docente, titulo):
         super().__init__(nombre, correo, contrasena)
         self._codigo_docente = codigo_docente
-        self._especialidad = especialidad
+        self._titulo= titulo
 
     @property
     def codigo_docente(self):
@@ -17,12 +17,9 @@ class Docente(Usuario):
         self._codigo_docente = nuevo_codigo
 
     @property
-    def especialidad(self):
-        return self._especialidad
+    def titulo(self):
+        return self._titulo
 
-    @especialidad.setter
-    def especialidad(self, nueva_especialidad):
-        self._especialidad = nueva_especialidad
-
-    def consultar_horario(self):
-        print(f"{self.nombre} está consultando su horario.")
+    @titulo.setter
+    def titulo(self, titulo):
+        self._titulo = titulo

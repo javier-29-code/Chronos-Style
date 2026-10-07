@@ -27,3 +27,6 @@ class Usuario:
     # Método para cambiar la contraseña
     def cambiar_contrasena(self, nueva_contrasena):
         self._contrasena = nueva_contrasena
+        
+    def consultar_horario(self):
+        print(f"{self.nombre} está consultando su horario.")

@@ -1,6 +1,7 @@
 from modelos.administrador_academico import AdministradorAcademico
 from modelos.docente import Docente
 from modelos.estudiante import Estudiante
+from modelos.usuario import Usuario
 
 
 administrador = AdministradorAcademico(
@@ -15,7 +16,7 @@ docente = Docente(
     "carlos@uleam.edu.ec",
     "abcdef",
     "DOC001",
-    "Programación"
+    "Ingenieria en software"
 )
 
 estudiante = Estudiante(
@@ -28,6 +29,8 @@ estudiante = Estudiante(
 )
 
 
+
+
 print("=== ADMINISTRADOR ===")
 print("Nombre:", administrador.nombre)
 print("Código:", administrador.codigo_empleado)
@@ -36,7 +39,7 @@ administrador.gestionar_horarios()
 print("\n=== DOCENTE ===")
 print("Nombre:", docente.nombre)
 print("Código:", docente.codigo_docente)
-print("Especialidad:", docente.especialidad)
+print("titulo:", docente.titulo)
 docente.consultar_horario()
 
 print("\n=== ESTUDIANTE ===")
