@@ -4,6 +4,7 @@ class ProgramaAcademico:
         self._id_programa = id_programa
         self._nombre = nombre
         self._nivel = nivel
+        self._plan_estudios = None
 
     @property
     def id_programa(self):
@@ -34,3 +35,22 @@ class ProgramaAcademico:
             f"El programa {self.nombre} está gestionando "
             f"su plan de estudios."
         )
+        
+    #añadiendo 3 metodos relacionados a plan de estudios
+    @property
+    def plan_estudios(self):
+        return self._plan_estudios
+
+    def asignar_plan_estudios(self, plan):
+        self._plan_estudios = plan
+        print(
+        f"Plan de estudios {plan.version} asignado "
+        f"al programa {self.nombre}."
+        )
+
+    def mostrar_plan_estudios(self):
+        if self._plan_estudios is None:
+            print("Este programa no tiene un plan de estudios asignado.")
+            return
+
+        self._plan_estudios.mostrar_asignaturas()

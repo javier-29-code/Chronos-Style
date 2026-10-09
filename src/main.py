@@ -1,3 +1,4 @@
+
 from modelos.administrador_academico import AdministradorAcademico
 from modelos.docente import Docente
 from modelos.estudiante import Estudiante
@@ -5,6 +6,8 @@ from modelos.programa_academico import ProgramaAcademico
 from modelos.plan_estudios import PlanEstudios
 from modelos.asignatura import Asignatura
 
+
+# Crear usuarios
 administrador = AdministradorAcademico(
     "javier",
     "javier@uleam.edu.ec",
@@ -29,62 +32,8 @@ estudiante = Estudiante(
     3
 )
 
-programa = ProgramaAcademico(
-    "PROG-TI",
-    "Tecnologías de la Información",
-    "Grado"
-)
 
-programa = ProgramaAcademico(
-    "PROG-TI",
-    "Tecnologías de la Información",
-    "3er nivel"
-)
-
-print("\n=== PLAN DE ESTUDIOS ===")
-
-plan = PlanEstudios(
-    "2025",
-    "2025-2029"
-)
-
-plan.agregar_asignatura("Programación Orientada a Objetos")
-plan.agregar_asignatura("Bases de Datos")
-plan.agregar_asignatura("Álgebra Lineal")
-
-plan.mostrar_asignaturas()
-
-print("Versión:", plan.version)
-print("Vigencia:", plan.vigencia)
-
-print("=== ADMINISTRADOR ===")
-print("Nombre:", administrador.nombre)
-print("Código:", administrador.codigo_empleado)
-administrador.gestionar_horarios()
-
-print("\n=== DOCENTE ===")
-print("Nombre:", docente.nombre)
-print("Código:", docente.codigo_docente)
-print("Titulo:", docente.titulo)
-docente.consultar_horario()
-
-print("\n=== ESTUDIANTE ===")
-print("Nombre:", estudiante.nombre)
-print("Código:", estudiante.codigo_estudiante)
-print("Carrera:", estudiante.carrera)
-print("Semestre:", estudiante.semestre)
-estudiante.consultar_informacion_academica()
-
-print("\n=== PROGRAMA ACADÉMICO ===")
-print("ID:", programa.id_programa)
-print("Nombre:", programa.nombre)
-print("Nivel:", programa.nivel)
-
-programa.gestionar_plan_estudios()
-
-
-print("\n=== ASIGNATURA ===")
-
+# Crear asignaturas
 programacion1 = Asignatura(
     "TI-POO1", "Programación I", 4, 6
 )
@@ -93,6 +42,70 @@ programacion2 = Asignatura(
     "TI-POO2", "Programación II", 4, 6
 )
 
+bases_datos = Asignatura(
+    "TI-BD1", "Bases de Datos", 3, 4
+)
+
+algebra_lineal = Asignatura(
+    "TI-MAT1", "Álgebra Lineal", 3, 4
+)
+
+# Definir prerrequisitos
 programacion2.definir_requisitos([programacion1])
 
+
+# Crear plan de estudios
+plan = PlanEstudios("2025", "2025-2029")
+
+plan.agregar_asignatura(programacion1)
+plan.agregar_asignatura(programacion2)
+plan.agregar_asignatura(bases_datos)
+plan.agregar_asignatura(algebra_lineal)
+
+print("\n=== PLAN DE ESTUDIOS ===")
+plan.mostrar_asignaturas()
+print("Versión:", plan.version)
+print("Vigencia:", plan.vigencia)
+
+
+# Crear programa académico y asignarle el plan
+programa = ProgramaAcademico(
+    "PROG-TI",
+    "Tecnologías de la Información",
+    "Pregrado"
+)
+
+programa.asignar_plan_estudios(plan)
+
+print("\n=== PROGRAMA Y SU PLAN DE ESTUDIOS ===")
+print("Programa:", programa.nombre)
+programa.mostrar_plan_estudios()
+
+
+# Administrador
+print("\n=== ADMINISTRADOR ===")
+print("Nombre:", administrador.nombre)
+print("Código:", administrador.codigo_empleado)
+administrador.gestionar_horarios()
+
+
+# Docente
+print("\n=== DOCENTE ===")
+print("Nombre:", docente.nombre)
+print("Código:", docente.codigo_docente)
+print("Titulo:", docente.titulo)
+docente.consultar_horario()
+
+
+# Estudiante
+print("\n=== ESTUDIANTE ===")
+print("Nombre:", estudiante.nombre)
+print("Código:", estudiante.codigo_estudiante)
+print("Carrera:", estudiante.carrera)
+print("Semestre:", estudiante.semestre)
+estudiante.consultar_informacion_academica()
+
+
+# Detalle de asignatura
+print("\n=== ASIGNATURA ===")
 programacion2.mostrar_informacion()
