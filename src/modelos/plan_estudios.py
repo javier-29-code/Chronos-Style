@@ -32,7 +32,7 @@ class PlanEstudios:
             return
 
         self._asignaturas.append(asignatura)
-        print(f"Asignatura '{asignatura}' agregada al plan.")
+        print(f"Asignatura '{asignatura.nombre}' agregada al plan.")
 
     def mostrar_asignaturas(self):
         print(f"Plan de estudios: {self.version}")
@@ -42,4 +42,4 @@ class PlanEstudios:
             return
 
         for asignatura in self._asignaturas:
-            print(f"- {asignatura}")
+            print(f"- {asignatura.nombre}")
