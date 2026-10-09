@@ -1,7 +1,7 @@
 from modelos.administrador_academico import AdministradorAcademico
 from modelos.docente import Docente
 from modelos.estudiante import Estudiante
-
+from modelos.programa_academico import ProgramaAcademico
 
 administrador = AdministradorAcademico(
     "javier",
@@ -27,6 +27,17 @@ estudiante = Estudiante(
     3
 )
 
+programa = ProgramaAcademico(
+    "PROG-TI",
+    "Tecnologías de la Información",
+    "Grado"
+)
+
+programa = ProgramaAcademico(
+    "PROG-TI",
+    "Tecnologías de la Información",
+    "3er nivel"
+)
 
 print("=== ADMINISTRADOR ===")
 print("Nombre:", administrador.nombre)
@@ -45,3 +56,10 @@ print("Código:", estudiante.codigo_estudiante)
 print("Carrera:", estudiante.carrera)
 print("Semestre:", estudiante.semestre)
 estudiante.consultar_informacion_academica()
+
+print("\n=== PROGRAMA ACADÉMICO ===")
+print("ID:", programa.id_programa)
+print("Nombre:", programa.nombre)
+print("Nivel:", programa.nivel)
+
+programa.gestionar_plan_estudios()
