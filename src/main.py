@@ -10,6 +10,9 @@ from modelos.asignatura import Asignatura
 from datetime import date
 from modelos.periodo_academico import PeriodoAcademico
 
+#Aula
+from modelos.aula import Aula
+
 # Crear usuarios
 administrador = AdministradorAcademico(
     "javier",
@@ -123,3 +126,17 @@ periodo = PeriodoAcademico(
 
 print("\n=== PERÍODO ACADÉMICO ===")
 periodo.mostrar_informacion()
+
+# Aula
+aula1 = Aula("102", "Edificio de Sistemas", 35, "Teórica")
+aula2 = Aula("LB204", "Edificio de Sistemas", 30, "Laboratorio")
+
+print("\n=== AULAS ===")
+aula1.mostrar_informacion()
+aula2.mostrar_informacion()
+
+aula1.ocupar_franja("Lunes 08:00-10:00")
+aula1.ocupar_franja("Lunes 08:00-10:00")   # Debe decir que NO está disponible
+aula1.ocupar_franja("Martes 10:00-12:00")  # Esta sí queda libre
+
+Aula.mostrar_total_aulas()
