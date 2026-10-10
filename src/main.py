@@ -6,6 +6,9 @@ from modelos.programa_academico import ProgramaAcademico
 from modelos.plan_estudios import PlanEstudios
 from modelos.asignatura import Asignatura
 
+#periodo academico
+from datetime import date
+from modelos.periodo_academico import PeriodoAcademico
 
 # Crear usuarios
 administrador = AdministradorAcademico(
@@ -100,7 +103,7 @@ docente.consultar_horario()
 # Estudiante
 print("\n=== ESTUDIANTE ===")
 print("Nombre:", estudiante.nombre)
-print("Código:", estudiante.codigo_estudiante)
+print("Codigo:", estudiante.codigo_estudiante)
 print("Carrera:", estudiante.carrera)
 print("Semestre:", estudiante.semestre)
 estudiante.consultar_informacion_academica()
@@ -109,3 +112,14 @@ estudiante.consultar_informacion_academica()
 # Detalle de asignatura
 print("\n=== ASIGNATURA ===")
 programacion2.mostrar_informacion()
+
+# Crear período académico
+periodo = PeriodoAcademico(
+    "PA-2026-1",
+    "Primer período académico 2026",
+    date(2026, 4, 1),
+    date(2026, 8, 31)
+)
+
+print("\n=== PERÍODO ACADÉMICO ===")
+periodo.mostrar_informacion()
