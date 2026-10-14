@@ -1,6 +1,8 @@
 class Aula:
 
     total_aulas = 0
+    # Tipos de aula permitidos
+    Tipos_validos = ["Teorica", "Laboratorio", "Auditorio"]
 
     def __init__(self, id_aula, edificio, capacidad, tipo):
         
@@ -22,6 +24,9 @@ class Aula:
 
     @id_aula.setter
     def id_aula(self, nuevo_id):
+        if not isinstance(nuevo_id, str) or nuevo_id.strip() == "":
+            #raise detiene el programa y muestra el error
+            raise ValueError("El ID del aula no puede estar vacía.")
         self._id_aula = nuevo_id
 
     @property
@@ -30,6 +35,8 @@ class Aula:
 
     @edificio.setter
     def edificio(self, nuevo_edificio):
+        if not isinstance(nuevo_edificio, str) or nuevo_edificio.strip() == "":
+            raise ValueError("El edificio no puede estar vacío.")
         self._edificio = nuevo_edificio
 
     @property
@@ -39,10 +46,9 @@ class Aula:
     @capacidad.setter
     def capacidad(self, nueva_capacidad):
         # El setter permite validar antes de guardar el dato.
-        if Aula.capacidad_valida(nueva_capacidad):
-            self._capacidad = nueva_capacidad
-        else:
-            print("La capacidad debe ser mayor que 0.")
+        if not Aula.capacidad_valida(nueva_capacidad):
+            raise ValueError("La capacidad debe ser un entero mayor que 0.")
+        self._capacidad = nueva_capacidad
 
     @property
     def tipo(self):
@@ -50,12 +56,14 @@ class Aula:
 
     @tipo.setter
     def tipo(self, nuevo_tipo):
+        if nuevo_tipo not in Aula.Tipos_validos:
+            raise ValueError(f"Tipo de aula inválido. Debe ser uno de: {Aula.Tipos_validos}")
         self._tipo = nuevo_tipo
 
     # MÉTODO ESTÁTICO: no usa self; solo hace una comprobación.
     @staticmethod
     def capacidad_valida(capacidad):
-        return capacidad > 0
+        return isinstance(capacidad, int) and capacidad > 0
 
     # MÉTODO DE CLASE:
     @classmethod
@@ -64,8 +72,10 @@ class Aula:
 
     # MÉTODO DE INSTANCIA que recibe un dato (la franja).
     def verificar_disponibilidad(self, franja):
-        # Devuelve True si la franja NO está en la lista de ocupadas.
-        return franja not in self._franjas_ocupadas
+        for franja_ocupada in self._franjas_ocupadas:
+            if franja == franja_ocupada:
+                return False
+        return True 
 
     def ocupar_franja(self, franja):
         if self.verificar_disponibilidad(franja):
@@ -73,6 +83,13 @@ class Aula:
             print(f"Aula {self.id_aula} ocupada en: {franja}")
         else:
             print(f"Aula {self.id_aula} NO está disponible en: {franja}")
+
+    def liberar_franja(self, franja):
+        if self.verificar_disponibilidad(franja):
+            print(f"La franja {franja} no estaba ocupada.")
+        else:
+            self._franjas_ocupadas.remove(franja)
+            print(f"Aula {self.id_aula} liberada en: {franja}")
 
     def mostrar_informacion(self):
         print(

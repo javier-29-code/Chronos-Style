@@ -136,7 +136,19 @@ aula1.mostrar_informacion()
 aula2.mostrar_informacion()
 
 aula1.ocupar_franja("Lunes 08:00-10:00")
-aula1.ocupar_franja("Lunes 08:00-10:00")   # Debe decir que NO está disponible
-aula1.ocupar_franja("Martes 10:00-12:00")  # Esta sí queda libre
+aula1.ocupar_franja("Lunes 08:00-10:00")  
+aula1.ocupar_franja("Martes 10:00-12:00")
+aula1.liberar_franja("Lunes 08:00-10:00")
+aula1.ocupar_franja("Lunes 08:00-10:00")  
+
+try:
+    aula_mala = Aula("103", "Edificio de Sistemas", -5, "Teórica")
+except ValueError as error:
+    print("Error:", error)
+
+try:
+    aula_mala = Aula("104", "Edificio de Sistemas", 30, "Cocina")
+except ValueError as error:
+    print("Error:", error)
 
 Aula.mostrar_total_aulas()
