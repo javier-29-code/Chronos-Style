@@ -42,10 +42,10 @@ class Aula:
     @property
     def capacidad(self):
         return self._capacidad
-
+    
+    # El setter permite validar antes de guardar el dato.
     @capacidad.setter
     def capacidad(self, nueva_capacidad):
-        # El setter permite validar antes de guardar el dato.
         if not Aula.capacidad_valida(nueva_capacidad):
             raise ValueError("La capacidad debe ser un entero mayor que 0.")
         self._capacidad = nueva_capacidad
@@ -60,7 +60,7 @@ class Aula:
             raise ValueError(f"Tipo de aula inválido. Debe ser uno de: {Aula.Tipos_validos}")
         self._tipo = nuevo_tipo
 
-    # MÉTODO estatico que solo hace una comprobación.
+    # Metodo estatico que solo hace una comprobación.
     @staticmethod
     def capacidad_valida(capacidad):
         return isinstance(capacidad, int) and capacidad > 0
@@ -69,7 +69,7 @@ class Aula:
     def mostrar_total_aulas(cls):
         print(f"Total de aulas creadas: {cls.total_aulas}")
 
-    # MÉTODO DE INSTANCIA que recibe un dato (la franja).
+    # Metodo de instancia que recibe un dato (la franja).
     def verificar_disponibilidad(self, franja):
         for franja_ocupada in self._franjas_ocupadas:
             if franja == franja_ocupada:
