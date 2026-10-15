@@ -2,7 +2,7 @@ class Aula:
 
     total_aulas = 0
     # Tipos de aula permitidos
-    Tipos_validos = ["Teorica", "Laboratorio", "Auditorio"]
+    Tipos_validos = ["Teorica", "Laboratorio de redes y electrónica", "Laboratorio de computación", "Auditorio"]
 
     def __init__(self, id_aula, edificio, capacidad, tipo):
         
@@ -60,12 +60,11 @@ class Aula:
             raise ValueError(f"Tipo de aula inválido. Debe ser uno de: {Aula.Tipos_validos}")
         self._tipo = nuevo_tipo
 
-    # MÉTODO ESTÁTICO: no usa self; solo hace una comprobación.
+    # MÉTODO estatico que solo hace una comprobación.
     @staticmethod
     def capacidad_valida(capacidad):
         return isinstance(capacidad, int) and capacidad > 0
 
-    # MÉTODO DE CLASE:
     @classmethod
     def mostrar_total_aulas(cls):
         print(f"Total de aulas creadas: {cls.total_aulas}")
