@@ -13,6 +13,7 @@ from modelos.periodo_academico import PeriodoAcademico
 #Aula
 from modelos.aula import Aula
 from modelos.aula_teorica import AulaTeorica
+from modelos.laboratorio_computo import LaboratorioComputo
 
 # Crear usuarios
 administrador = AdministradorAcademico(
@@ -130,7 +131,7 @@ periodo.mostrar_informacion()
 
 # Aula
 aula1 = AulaTeorica("102", "Edificio de Sistemas", 35, True)
-aula2 = Aula("LB204", "Edificio de Sistemas", 30, "Laboratorio")
+aula2 = LaboratorioComputo("LB204", "Edificio de Sistemas", 30, 28)
 
 print("\n=== AULAS ===")
 aula1.mostrar_informacion()
