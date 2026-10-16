@@ -17,6 +17,9 @@ from modelos.laboratorio_computo import LaboratorioComputo
 from modelos.laboratorio_electronica import LaboratorioElectronica
 from modelos.laboratorio_redes import LaboratorioRedes
 
+#Franja horaria
+from modelos.franja_horaria import FranjaHoraria
+
 # Crear usuarios
 administrador = AdministradorAcademico(
     "javier",
@@ -142,12 +145,15 @@ aula2.mostrar_informacion()
 aula3.mostrar_informacion()
 aula4.mostrar_informacion()
 
-aula1.ocupar_franja("Lunes 08:00-10:00")
-aula1.ocupar_franja("Lunes 08:00-10:00")  
-aula1.ocupar_franja("Martes 10:00-12:00")
-aula1.liberar_franja("Lunes 08:00-10:00")
+franja_a = FranjaHoraria("Lunes", 8, 10)
+franja_b = FranjaHoraria("Lunes", 9, 11)
+franja_c = FranjaHoraria("Martes", 10, 12)
 
-
+aula1.ocupar_franja(franja_a)
+aula1.ocupar_franja(franja_b)
+aula1.ocupar_franja(franja_c)
+aula1.liberar_franja(franja_a)
+aula1.ocupar_franja(franja_b)
 
 try:
     aula_mala = Aula("103", "Edificio de Sistemas", -5, "Teórica")
@@ -163,5 +169,5 @@ try:
     lab_malo = LaboratorioComputo("LB205", "Edificio de Sistemas", 30, -3)
 except ValueError as error:
     print("Error:", error)
-    
+
 Aula.mostrar_total_aulas()

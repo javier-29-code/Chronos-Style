@@ -78,7 +78,8 @@ class Aula:
     # Metodo de instancia que recibe un dato (la franja).
     def verificar_disponibilidad(self, franja):
         for franja_ocupada in self._franjas_ocupadas:
-            if franja == franja_ocupada:
+            #Revisa si chocan
+            if franja.se_solapa_con(franja_ocupada):
                 return False
         return True 
 
@@ -90,11 +91,12 @@ class Aula:
             print(f"Aula {self.id_aula} NO está disponible en: {franja}")
 
     def liberar_franja(self, franja):
-        if self.verificar_disponibilidad(franja):
+       for franja_ocupada in self._franjas_ocupadas:
+            if franja_ocupada.es_igual_a(franja):
+                self._franjas_ocupadas.remove(franja_ocupada)
+                print(f"Aula {self.id_aula} liberada en: {franja}")
+                return
             print(f"La franja {franja} no estaba ocupada.")
-        else:
-            self._franjas_ocupadas.remove(franja)
-            print(f"Aula {self.id_aula} liberada en: {franja}")
 
     def mostrar_informacion(self):
         print(
