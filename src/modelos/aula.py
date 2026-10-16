@@ -2,14 +2,20 @@ class Aula:
 
     total_aulas = 0
     # Tipos de aula permitidos
-    Tipos_validos = ["Teorica", "Laboratorio de redes y electrónica", "Laboratorio de computación", "Auditorio"]
+    Tipos_validos = [
+        "Teórica",
+        "Laboratorio de computación",
+        "Laboratorio de electrónica",
+        "Laboratorio de redes",
+        "Auditorio"
+    ]
 
     def __init__(self, id_aula, edificio, capacidad, tipo):
         
-        self._id_aula = id_aula
-        self._edificio = edificio
-        self._capacidad = capacidad
-        self._tipo = tipo
+        self.id_aula = id_aula
+        self.edificio = edificio
+        self.capacidad = capacidad
+        self.tipo = tipo
 
         # Lista que guarda las franjas en las que el aula ya está ocupada.
         # Al inicio está vacía (el aula está libre).
