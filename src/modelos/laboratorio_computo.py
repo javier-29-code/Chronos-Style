@@ -3,9 +3,10 @@ from modelos.aula import Aula
 class LaboratorioComputo(Aula):
 
     def __init__(self, id_aula, edificio, capacidad, numero_computadoras):
-        super().__init__(id_aula, edificio, capacidad, "Laboratorio de computación")
         self.numero_computadoras = numero_computadoras
+        super().__init__(id_aula, edificio, capacidad, "Laboratorio de computación")
 
+        
     @property
     def numero_computadoras(self):
         return self._numero_computadoras

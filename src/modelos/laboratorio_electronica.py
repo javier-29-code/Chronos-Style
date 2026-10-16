@@ -1,5 +1,6 @@
 from modelos.aula import Aula
 
+
 class LaboratorioElectronica(Aula):
     def __init__(self, id_aula, edificio, capacidad, numero_equipos):
         super().__init__(id_aula, edificio, capacidad, "Laboratorio de electrónica")

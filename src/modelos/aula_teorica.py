@@ -1,9 +1,10 @@
 from modelos.aula import Aula
 
+
 class AulaTeorica(Aula):
     def __init__(self, id_aula, edificio, capacidad, tiene_proyector):
         super().__init__(id_aula, edificio, capacidad, "Teórica")
-        self._tiene_proyector = tiene_proyector
+        self.tiene_proyector = tiene_proyector
 
     @property
     def tiene_proyector(self):
