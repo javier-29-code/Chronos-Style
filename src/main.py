@@ -14,6 +14,7 @@ from modelos.periodo_academico import PeriodoAcademico
 from modelos.aula import Aula
 from modelos.aula_teorica import AulaTeorica
 from modelos.laboratorio_computo import LaboratorioComputo
+from modelos.laboratorio_electronica import LaboratorioElectronica
 
 # Crear usuarios
 administrador = AdministradorAcademico(
@@ -132,16 +133,18 @@ periodo.mostrar_informacion()
 # Aula
 aula1 = AulaTeorica("102", "Edificio de Sistemas", 35, True)
 aula2 = LaboratorioComputo("LB204", "Edificio de Sistemas", 30, 28)
-
+aula3 = LaboratorioElectronica("LE305", "Edificio de Sistemas", 25, 15)
 print("\n=== AULAS ===")
 aula1.mostrar_informacion()
 aula2.mostrar_informacion()
+aula3.mostrar_informacion()
 
 aula1.ocupar_franja("Lunes 08:00-10:00")
 aula1.ocupar_franja("Lunes 08:00-10:00")  
 aula1.ocupar_franja("Martes 10:00-12:00")
 aula1.liberar_franja("Lunes 08:00-10:00")
 aula1.ocupar_franja("Lunes 08:00-10:00")  
+
 
 try:
     aula_mala = Aula("103", "Edificio de Sistemas", -5, "Teórica")
