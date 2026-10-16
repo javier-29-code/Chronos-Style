@@ -16,4 +16,4 @@ class AdministradorAcademico(Usuario):
         self._codigo_empleado = nuevo_codigo
 
     def gestionar_horarios(self):
-        print(f"{self.nombre} está gestionando los horarios académicos.")
+        print(f"{self.nombre} esta gestionando los horarios académicos.")
