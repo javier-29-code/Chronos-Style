@@ -18,6 +18,7 @@ class Usuario(ABC):
         self._correo = self._validar_correo(correo)
         self._validar_contrasena(contrasena)
         self._contrasena = contrasena
+        self._sesion_activa = False
 
     # ---------- Validaciones ----------
 
@@ -84,6 +85,22 @@ class Usuario(ABC):
             raise ValueError("La contraseña actual es incorrecta.")
         self._validar_contrasena(nueva_contrasena)
         self._contrasena = nueva_contrasena
+        
+    # ---------- Sesión ----------
+
+    @property
+    def sesion_activa(self):
+        return self._sesion_activa
+
+    def iniciar_sesion(self, contrasena):
+        """Inicia sesión si la contraseña es correcta."""
+        if not self.verificar_contrasena(contrasena):
+            raise ValueError("Contraseña incorrecta.")
+        self._sesion_activa = True
+
+    def cerrar_sesion(self):
+        """Cierra la sesión."""
+        self._sesion_activa = False
 
     # ---------- Perfil ----------
 
