@@ -8,12 +8,8 @@ class Docente(Usuario):
 
     def __init__(self, nombre, correo, contrasena, titulo, area, horas_semanales_max):
         super().__init__(nombre, correo, contrasena)
-        if not titulo.strip():
-            raise ValueError("El título no puede estar vacío.")
-        if not area.strip():
-            raise ValueError("El área no puede estar vacía.")
-        self._titulo = titulo.strip()
-        self._area = area.strip()
+        self._titulo = self._validar_texto(titulo, "El título")
+        self._area = self._validar_texto(area, "El área")
         self._horas_semanales_max = self._validar_horas(horas_semanales_max)
 
     # ---------- Validaciones ----------

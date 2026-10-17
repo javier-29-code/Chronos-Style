@@ -8,9 +8,7 @@ class AdministradorAcademico(Usuario):
 
     def __init__(self, nombre, correo, contrasena, facultad):
         super().__init__(nombre, correo, contrasena)
-        if not facultad.strip():
-            raise ValueError("La facultad no puede estar vacía.")
-        self._facultad = facultad.strip()
+        self._facultad = self._validar_texto(facultad, "La facultad")
 
     @property
     def facultad(self):

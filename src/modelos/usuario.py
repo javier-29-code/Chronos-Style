@@ -26,6 +26,12 @@ class Usuario(ABC):
         if not isinstance(nombre, str) or not nombre.strip():
             raise ValueError("El nombre no puede estar vacío.")
         return nombre.strip()
+    
+    def _validar_texto(self, valor, campo):
+        """Valida que un dato sea texto no vacío y lo devuelve sin espacios sobrantes."""
+        if not isinstance(valor, str) or not valor.strip():
+            raise ValueError(f"{campo} no puede estar vacío.")
+        return valor.strip()
 
     def _validar_correo(self, correo):
         if not isinstance(correo, str):
