@@ -22,28 +22,39 @@ from modelos.franja_horaria import FranjaHoraria
 
 # Crear usuarios
 administrador = AdministradorAcademico(
-    "javier",
+    "Javier",
     "javier@uleam.edu.ec",
-    "123456",
-    "ADM001"
+    "clave1234",
+    "Facultad de Ciencias Informáticas"
 )
 
 docente = Docente(
     "Carlos",
-    "carlos@uleam.edu.ec",
-    "abcdef",
-    "DOC001",
-    "Ing en tecnologias de la informacion"
+    "carlos.perez@uleam.edu.ec",
+    "clave1234",
+    "Ingeniero en Tecnologías de la Información",
+    "Programación",
+    20
 )
 
 estudiante = Estudiante(
     "Ana",
-    "ana@uleam.edu.ec",
-    "987654",
-    "EST001",
+    "e1312345678@live.uleam.edu.ec",
+    "clave1234",
     "Tecnologías de la Información",
     3
 )
+
+
+# Usuarios
+print("\n=== ADMINISTRADOR ===")
+print(administrador.mostrar_perfil())
+
+print("\n=== DOCENTE ===")
+print(docente.mostrar_perfil())
+
+print("\n=== ESTUDIANTE ===")
+print(estudiante.mostrar_perfil())
 
 
 # Crear asignaturas
@@ -95,28 +106,6 @@ print("Programa:", programa.nombre)
 programa.mostrar_plan_estudios()
 
 
-# Administrador
-print("\n=== ADMINISTRADOR ===")
-print("Nombre:", administrador.nombre)
-print("Código:", administrador.codigo_empleado)
-administrador.gestionar_horarios()
-
-
-# Docente
-print("\n=== DOCENTE ===")
-print("Nombre:", docente.nombre)
-print("Código:", docente.codigo_docente)
-print("Titulo:", docente.titulo)
-docente.consultar_horario()
-
-
-# Estudiante
-print("\n=== ESTUDIANTE ===")
-print("Nombre:", estudiante.nombre)
-print("Codigo:", estudiante.codigo_estudiante)
-print("Carrera:", estudiante.carrera)
-print("Semestre:", estudiante.semestre)
-estudiante.consultar_informacion_academica()
 
 
 # Detalle de asignatura
