@@ -116,3 +116,7 @@ class Usuario(ABC):
 
         Importante: nunca debe incluir la contraseña.
         """
+    @abstractmethod
+    def ver_horario(self):
+        """Devuelve el horario del usuario. Cada hija decide cuál horario muestra."""
+        pass

@@ -80,6 +80,12 @@ class TestUsuarioBase(unittest.TestCase):
         with self.assertRaises(ValueError):
             est.iniciar_sesion("incorrecta1")
         self.assertFalse(est.sesion_activa)
+    def test_ver_horario_devuelve_texto(self):
+        adm = AdministradorAcademico(
+            "Luis Vera", "luis.vera@uleam.edu.ec", "clave1234", "Ciencias Informaticas"
+        )
+        for usuario in (crear_estudiante(), crear_docente(), adm):
+            self.assertIsInstance(usuario.ver_horario(), str)
 
 
 class TestEstudiante(unittest.TestCase):

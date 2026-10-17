@@ -20,3 +20,5 @@ class AdministradorAcademico(Usuario):
             f"Correo: {self._correo}\n"
             f"Facultad: {self._facultad}"
         )
+    def ver_horario(self):
+        return f"Horario general de {self._facultad}: pendiente de integrar con Horario."

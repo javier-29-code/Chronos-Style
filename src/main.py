@@ -49,12 +49,15 @@ estudiante = Estudiante(
 # Usuarios
 print("\n=== ADMINISTRADOR ===")
 print(administrador.mostrar_perfil())
+print(administrador.ver_horario())
 
 print("\n=== DOCENTE ===")
 print(docente.mostrar_perfil())
+print(docente.ver_horario())
 
 print("\n=== ESTUDIANTE ===")
 print(estudiante.mostrar_perfil())
+print(estudiante.ver_horario())
 
 
 # Crear asignaturas

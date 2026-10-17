@@ -52,3 +52,7 @@ class Estudiante(Usuario):
             f"Carrera: {self._carrera}\n"
             f"Semestre: {self._semestre}"
         )
+        
+    #--------- Horario ----------
+    def ver_horario(self):
+        return f"Horario del estudiante {self._nombre}: pendiente de integrar con Horario."

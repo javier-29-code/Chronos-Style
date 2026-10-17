@@ -51,3 +51,5 @@ class Docente(Usuario):
             f"Área: {self._area}\n"
             f"Horas semanales máximas: {self._horas_semanales_max}"
         )
+    def ver_horario(self):
+        return f"Horario de clases del docente {self._nombre}: pendiente de integrar con Horario."
