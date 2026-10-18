@@ -24,7 +24,6 @@ class GestorUsuarios:
         usuario.iniciar_sesion(contrasena)
         return usuario
  
- 
 def crear_gestor_con_datos_ejemplo():
     """Gestor con un usuario de cada tipo, para probar la interfaz."""
     gestor = GestorUsuarios()
