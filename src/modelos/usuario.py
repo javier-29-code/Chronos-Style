@@ -18,6 +18,7 @@ class Usuario(ABC):
         self._correo = self._validar_correo(correo)
         self._validar_contrasena(contrasena)
         self._contrasena = contrasena
+        self._sesion_activa = False
 
     # ---------- Validaciones ----------
 
@@ -25,6 +26,12 @@ class Usuario(ABC):
         if not isinstance(nombre, str) or not nombre.strip():
             raise ValueError("El nombre no puede estar vacío.")
         return nombre.strip()
+    
+    def _validar_texto(self, valor, campo):
+        """Valida que un dato sea texto no vacío y lo devuelve sin espacios sobrantes."""
+        if not isinstance(valor, str) or not valor.strip():
+            raise ValueError(f"{campo} no puede estar vacío.")
+        return valor.strip()
 
     def _validar_correo(self, correo):
         if not isinstance(correo, str):
@@ -84,6 +91,22 @@ class Usuario(ABC):
             raise ValueError("La contraseña actual es incorrecta.")
         self._validar_contrasena(nueva_contrasena)
         self._contrasena = nueva_contrasena
+        
+    # ---------- Sesión ----------
+
+    @property
+    def sesion_activa(self):
+        return self._sesion_activa
+
+    def iniciar_sesion(self, contrasena):
+        """Inicia sesión si la contraseña es correcta."""
+        if not self.verificar_contrasena(contrasena):
+            raise ValueError("Contraseña incorrecta.")
+        self._sesion_activa = True
+
+    def cerrar_sesion(self):
+        """Cierra la sesión."""
+        self._sesion_activa = False
 
     # ---------- Perfil ----------
 
@@ -93,3 +116,7 @@ class Usuario(ABC):
 
         Importante: nunca debe incluir la contraseña.
         """
+    @abstractmethod
+    def ver_horario(self):
+        """Devuelve el horario del usuario. Cada hija decide cuál horario muestra."""
+        pass

@@ -2,18 +2,23 @@ from modelos.usuario import Usuario
 
 
 class AdministradorAcademico(Usuario):
+    """Usuario que administra la parte académica (horarios, aulas, materias)."""
 
-    def __init__(self, nombre, correo, contrasena, codigo_empleado):
+    _DOMINIO_CORREO = "uleam.edu.ec"
+
+    def __init__(self, nombre, correo, contrasena, facultad):
         super().__init__(nombre, correo, contrasena)
-        self._codigo_empleado = codigo_empleado
+        self._facultad = self._validar_texto(facultad, "La facultad")
 
     @property
-    def codigo_empleado(self):
-        return self._codigo_empleado
+    def facultad(self):
+        return self._facultad
 
-    @codigo_empleado.setter
-    def codigo_empleado(self, nuevo_codigo):
-        self._codigo_empleado = nuevo_codigo
-
-    def gestionar_horarios(self):
-        print(f"{self.nombre} esta gestionando los horarios académicos.")
+    def mostrar_perfil(self):
+        return (
+            f"Administrador académico: {self._nombre}\n"
+            f"Correo: {self._correo}\n"
+            f"Facultad: {self._facultad}"
+        )
+    def ver_horario(self):
+        return f"Horario general de {self._facultad}: pendiente de integrar con Horario."
