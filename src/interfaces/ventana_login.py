@@ -4,7 +4,7 @@ Esta capa solo muestra datos y recoge lo que escribe el usuario.
 Toda la lógica de validación vive en servicios/gestor_usuarios.py.
 """
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 from servicios.gestor_usuarios import crear_gestor_con_datos_ejemplo
 
@@ -27,6 +27,8 @@ class VentanaLogin(tk.Tk):
         super().__init__()
         # El gestor llega desde afuera: la ventana no crea ni guarda usuarios.
         self._gestor = gestor
+        # Aquí queda el usuario que inició sesión (None si se cierra la ventana sin ingresar).
+        self.usuario = None
 
         self.title("Chronos-Style - Iniciar sesión")
         self.resizable(False, False)
@@ -154,9 +156,9 @@ class VentanaLogin(tk.Tk):
             self._entrada_contrasena.delete(0, "end")
             self._entrada_contrasena.focus()
             return
-        self._mensaje_error.set("")
-        # Provisional: en el Paso 4 aquí se abrirá la ventana principal.
-        messagebox.showinfo("Bienvenido", f"Hola, {usuario.nombre}")
+        # Login correcto: guardamos el usuario y cerramos esta ventana.
+        self.usuario = usuario
+        self.destroy()
 
 
 if __name__ == "__main__":
