@@ -43,3 +43,5 @@ class PlanEstudios:
 
         for asignatura in self._asignaturas:
             print(f"- {asignatura.nombre}")
+            
+    
