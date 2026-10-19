@@ -57,6 +57,7 @@ class PeriodoAcademico:
 
         self._fecha_fin = nueva_fecha
 
+
     def mostrar_informacion(self):
         print(f"Código: {self.codigo}")
         print(f"Nombre: {self.nombre}")
