@@ -91,12 +91,14 @@ class Aula:
             print(f"Aula {self.id_aula} NO está disponible en: {franja}")
 
     def liberar_franja(self, franja):
-       for franja_ocupada in self._franjas_ocupadas:
+        # Busca en las franjas ocupadas una que sea igual a la pedida
+        for franja_ocupada in self._franjas_ocupadas:
             if franja_ocupada.es_igual_a(franja):
                 self._franjas_ocupadas.remove(franja_ocupada)
                 print(f"Aula {self.id_aula} liberada en: {franja}")
                 return
-            print(f"La franja {franja} no estaba ocupada.")
+        # Si el bucle termina sin encontrarla, recién aquí se avisa
+        print(f"La franja {franja} no estaba ocupada.")
 
     def mostrar_informacion(self):
         print(
@@ -105,3 +107,6 @@ class Aula:
             f"Capacidad: {self.capacidad} - "
             f"Tipo: {self.tipo}"
         )
+    # Dice si el aula alcanza para esa cantidad de estudiantes
+    def tiene_capacidad(self, cantidad_estudiantes):
+        return self.capacidad >= cantidad_estudiantes

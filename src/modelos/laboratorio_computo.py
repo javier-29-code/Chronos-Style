@@ -20,3 +20,14 @@ class LaboratorioComputo(Aula):
     def mostrar_informacion(self):
         super().mostrar_informacion()
         print(f"Número de computadoras: {self.numero_computadoras}")
+        
+# Sobrescribe el método de Aula (polimorfismo)
+    def mostrar_informacion(self):
+        # Primero muestra los datos comunes que ya imprime Aula
+        super().mostrar_informacion()
+        # Luego añade lo propio del laboratorio
+        print(f"Computadoras: {self.num_computadoras}")
+        if self.verificar_equipos():
+            print("Equipos: suficientes para todos los puestos")
+        else:
+            print("Equipos: insuficientes para todos los puestos")
