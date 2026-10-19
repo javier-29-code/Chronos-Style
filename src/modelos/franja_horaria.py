@@ -74,3 +74,10 @@ class FranjaHoraria:
     # Define el texto que aparece (franja)
     def __str__(self):
         return f"{self.dia} {self.hora_inicio}:00-{self.hora_fin}:00"
+    
+    # Cambia inicio y fin a la vez, validando el par completo
+    def cambiar_horas(self, nuevo_inicio, nuevo_fin):
+        if not FranjaHoraria.horas_validas(nuevo_inicio, nuevo_fin):
+            raise ValueError("Horas inválidas.")
+        self._hora_inicio = nuevo_inicio
+        self._hora_fin = nuevo_fin
