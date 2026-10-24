@@ -25,6 +25,9 @@ class GestorUsuarios:
 
         usuario.iniciar_sesion(contrasena)
         return usuario
+    def listar(self):
+        """Devuelve una copia de la colección de usuarios."""
+        return list(self._usuarios.values())
 
 
 def crear_gestor_con_datos_ejemplo():
