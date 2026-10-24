@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 from interfaces.panel_horarios import PanelHorarios
 from interfaces.panel_consulta_horarios import PanelConsultaHorarios
+from modelos.docente import Docente
 
 # Reutilizamos los colores del login para que ambas pantallas se vean iguales.
 from interfaces.ventana_login import (
@@ -143,6 +144,22 @@ class VentanaPrincipal(tk.Tk):
                     text="Consultar horarios",
                 )
 
+        # Si no tiene consulta general, un docente puede ver sus clases.
+        if (
+            self._panel_consulta is None
+            and isinstance(self._usuario, Docente)
+        ):
+            self._panel_consulta = PanelConsultaHorarios(
+                master=cuaderno,
+                gestor_horarios=self._gestor_horarios,
+                docente=self._usuario,
+            )
+
+            cuaderno.add(
+                self._panel_consulta,
+                text="Mi horario",
+            )
+            
         if (
             self._panel_horarios is not None
             and self._panel_consulta is not None

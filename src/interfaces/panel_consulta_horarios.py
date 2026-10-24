@@ -6,10 +6,11 @@ from modelos.franja_horaria import FranjaHoraria
 
 
 class PanelConsultaHorarios(ttk.Frame):
-    def __init__(self, master, gestor_horarios):
+    def __init__(self, master, gestor_horarios, docente=None):
         super().__init__(master, padding=20)
 
         self._gestor_horarios = gestor_horarios
+        self._docente = docente
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
@@ -20,7 +21,11 @@ class PanelConsultaHorarios(ttk.Frame):
     def _crear_interfaz(self):
         ttk.Label(
             self,
-            text="Horarios registrados",
+            text=(
+            "Mi horario docente"
+            if self._docente is not None
+            else "Horarios registrados"
+        ),
             font=("Segoe UI", 17, "bold"),
         ).grid(row=0, column=0, sticky="w", pady=(0, 15))
 
@@ -130,6 +135,13 @@ class PanelConsultaHorarios(ttk.Frame):
             self._tabla.delete(fila)
 
         horarios = self._gestor_horarios.listar()
+        if self._docente is not None:
+            horarios = [
+                horario
+                for horario in horarios
+                if horario.docente is self._docente
+            ]
+            
         dia_seleccionado = self._filtro_dia.get()
 
         visibles = [
