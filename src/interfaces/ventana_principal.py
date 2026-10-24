@@ -5,6 +5,7 @@ clase hija implementa a su manera (polimorfismo). Esta capa solo muestra datos.
 """
 import tkinter as tk
 from tkinter import ttk
+from interfaces.panel_horarios import PanelHorarios
 
 # Reutilizamos los colores del login para que ambas pantallas se vean iguales.
 from interfaces.ventana_login import (
@@ -12,17 +13,20 @@ from interfaces.ventana_login import (
 )
 
 COLOR_FONDO_APP = "#f3f4f6"   # gris claro del fondo general
-ANCHO = 900
-ALTO = 560
+ANCHO = 1050
+ALTO = 720
 
 
 class VentanaPrincipal(tk.Tk):
     """Ventana con cabecera (nombre, rol, cerrar sesión) y pestañas."""
 
-    def __init__(self, usuario):
+    def __init__(self, usuario, gestor_catalogos, gestor_horarios):
         super().__init__()
+
         self._usuario = usuario
-        # La usa aplicacion.py para saber si hay que volver al login o salir.
+        self._gestor_catalogos = gestor_catalogos
+        self._gestor_horarios = gestor_horarios
+
         self.cerro_sesion = False
 
         self.title("Chronos-Style")
@@ -30,7 +34,7 @@ class VentanaPrincipal(tk.Tk):
         self._configurar_estilos()
         self._crear_cabecera()
         self._crear_pestanas()
-
+        
     # ---------- Configuración de la ventana ----------
 
     def _centrar_ventana(self):
@@ -95,10 +99,33 @@ class VentanaPrincipal(tk.Tk):
                   style="Rol.TLabel").pack(anchor="e")
 
     def _crear_pestanas(self):
-        """Contenedor de pestañas. Por ahora solo 'Mi perfil' (Horario y contraseña vienen en el 4b)."""
         cuaderno = ttk.Notebook(self)
-        cuaderno.pack(fill="both", expand=True, padx=20, pady=20)
+        cuaderno.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=20,
+        )
+
         self._crear_pestana_perfil(cuaderno)
+
+        comprobar_permiso = getattr(
+            self._usuario,
+            "tiene_permiso",
+            None,
+        )
+
+        if (
+            callable(comprobar_permiso)
+            and comprobar_permiso("gestionar_horarios")
+        ):
+            panel = PanelHorarios(
+                master=cuaderno,
+                gestor_catalogos=self._gestor_catalogos,
+                gestor_horarios=self._gestor_horarios,
+            )
+
+            cuaderno.add(panel, text="Registrar horario")
 
     def _crear_pestana_perfil(self, cuaderno):
         """Tarjeta con los datos del perfil, una fila por cada línea de mostrar_perfil()."""
