@@ -6,6 +6,7 @@ clase hija implementa a su manera (polimorfismo). Esta capa solo muestra datos.
 import tkinter as tk
 from tkinter import ttk
 from interfaces.panel_horarios import PanelHorarios
+from interfaces.panel_consulta_horarios import PanelConsultaHorarios
 
 # Reutilizamos los colores del login para que ambas pantallas se vean iguales.
 from interfaces.ventana_login import (
@@ -115,17 +116,41 @@ class VentanaPrincipal(tk.Tk):
             None,
         )
 
-        if (
-            callable(comprobar_permiso)
-            and comprobar_permiso("gestionar_horarios")
-        ):
-            panel = PanelHorarios(
-                master=cuaderno,
-                gestor_catalogos=self._gestor_catalogos,
-                gestor_horarios=self._gestor_horarios,
-            )
+        self._panel_horarios = None
+        self._panel_consulta = None
 
-            cuaderno.add(panel, text="Registrar horario")
+        if callable(comprobar_permiso):
+            if comprobar_permiso("gestionar_horarios"):
+                self._panel_horarios = PanelHorarios(
+                    master=cuaderno,
+                    gestor_catalogos=self._gestor_catalogos,
+                    gestor_horarios=self._gestor_horarios,
+                )
+
+                cuaderno.add(
+                    self._panel_horarios,
+                    text="Registrar horario",
+                )
+
+            if comprobar_permiso("consultar_horarios_generales"):
+                self._panel_consulta = PanelConsultaHorarios(
+                    master=cuaderno,
+                    gestor_horarios=self._gestor_horarios,
+                )
+
+                cuaderno.add(
+                    self._panel_consulta,
+                    text="Consultar horarios",
+                )
+
+        if (
+            self._panel_horarios is not None
+            and self._panel_consulta is not None
+        ):
+            self._panel_horarios.bind(
+                "<<HorariosActualizados>>",
+                self._panel_consulta.actualizar,
+            )
 
     def _crear_pestana_perfil(self, cuaderno):
         """Tarjeta con los datos del perfil, una fila por cada línea de mostrar_perfil()."""
