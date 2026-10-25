@@ -3,6 +3,7 @@ from modelos.restriccion import (
     RestriccionDocente,
     RestriccionAula,
     RestriccionParalelo,
+    RestriccionCargaDocente,
 )
 
 
@@ -15,6 +16,7 @@ class GestorHorarios:
                 RestriccionDocente(),
                 RestriccionAula(),
                 RestriccionParalelo(),
+                RestriccionCargaDocente(),
             ]
 
         # Se inicializan siempre, se reciban o no restricciones.

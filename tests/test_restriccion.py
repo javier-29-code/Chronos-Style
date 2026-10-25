@@ -5,10 +5,14 @@ from modelos.horario import Horario
 from modelos.conflicto_horario import ConflictoHorario
 from modelos.restriccion import Restriccion, RestriccionDocente, RestriccionAula
 
+from types import SimpleNamespace
+
 
 class FranjaFalsa:
     def __init__(self, se_solapa):
         self._se_solapa = se_solapa
+        self.hora_inicio = 8
+        self.hora_fin = 10
 
     def se_solapa_con(self, otra):
         return self._se_solapa
@@ -16,7 +20,14 @@ class FranjaFalsa:
 
 class TestRestriccion(unittest.TestCase):
     def setUp(self):
-        self.doc_1, self.doc_2 = object(), object()
+        self.doc_1 = SimpleNamespace(
+            nombre="Docente 1",
+            horas_semanales_max=20,
+        )
+        self.doc_2 = SimpleNamespace(
+            nombre="Docente 2",
+            horas_semanales_max=20,
+        )
         self.aula_1, self.aula_2 = object(), object()
         self.nuevo = Horario("POO", self.doc_1, self.aula_1, FranjaFalsa(True))
 

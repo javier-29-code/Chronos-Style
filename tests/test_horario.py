@@ -4,11 +4,14 @@
 import unittest
 from modelos.horario import Horario  # ajusta la ruta a la de tu proyecto
 
+from types import SimpleNamespace
 
 class FranjaFalsa:
     """Imita a FranjaHoraria: responde lo que le indiquemos."""
     def __init__(self, se_solapa):
         self._se_solapa = se_solapa
+        self.hora_inicio = 8
+        self.hora_fin = 10
 
     def se_solapa_con(self, otra):
         return self._se_solapa
@@ -16,8 +19,14 @@ class FranjaFalsa:
 
 class TestHorario(unittest.TestCase):
     def setUp(self):
-        self.docente_1 = object()
-        self.docente_2 = object()
+        self.docente_1 = SimpleNamespace(
+            nombre="Docente 1",
+            horas_semanales_max=20,
+        )
+        self.docente_2 = SimpleNamespace(
+            nombre="Docente 2",
+            horas_semanales_max=20,
+        )
         self.aula_1 = object()
         self.aula_2 = object()
 

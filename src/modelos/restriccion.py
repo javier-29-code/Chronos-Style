@@ -83,3 +83,54 @@ class RestriccionParalelo(Restriccion):
                 horario_existente
             )
         )
+        
+class RestriccionCargaDocente(Restriccion):
+    """Impide superar las horas semanales máximas del docente."""
+
+    def __init__(self):
+        super().__init__(
+            "Carga docente máxima",
+            "La asignación supera las horas semanales máximas del docente",
+        )
+
+    def verificar(self, horario_nuevo, horarios_existentes):
+        # Solo considera las clases del mismo docente.
+        horarios_docente = [
+            horario
+            for horario in horarios_existentes
+            if (
+                horario is not horario_nuevo
+                and horario_nuevo.tiene_mismo_docente(horario)
+            )
+        ]
+
+        horas_actuales = sum(
+            horario.franja.hora_fin - horario.franja.hora_inicio
+            for horario in horarios_docente
+        )
+
+        horas_nuevas = (
+            horario_nuevo.franja.hora_fin
+            - horario_nuevo.franja.hora_inicio
+        )
+
+        limite = horario_nuevo.docente.horas_semanales_max
+        total = horas_actuales + horas_nuevas
+
+        if total <= limite:
+            return []
+
+        motivo = (
+            f"El docente {horario_nuevo.docente.nombre} "
+            f"superaría su carga semanal: "
+            f"{total} horas asignadas, máximo {limite}."
+        )
+
+        return [
+            ConflictoHorario(
+                horario_nuevo,
+                existente,
+                motivo,
+            )
+            for existente in horarios_docente
+        ]

@@ -3,6 +3,8 @@ import unittest
 
 from modelos.horario import Horario
 from servicios.gestor_horarios import GestorHorarios
+
+from types import SimpleNamespace
 # + los imports de Docente, Aula y FranjaHoraria, copiados de test_restriccion.py
 
 class FranjaSimple:
@@ -11,6 +13,9 @@ class FranjaSimple:
         self.dia = dia
         self.inicio = inicio
         self.fin = fin
+        
+        self.hora_inicio = inicio
+        self.hora_fin = fin
 
     def se_solapa_con(self, otra):
         # Se solapan si es el mismo día y los intervalos se cruzan
@@ -26,7 +31,15 @@ class TestGestorHorarios(unittest.TestCase):
 
     def setUp(self):
         # Docentes y aulas de prueba: objetos simples, igual que en test_restriccion
-        self.docente_1, self.docente_2 = object(), object()
+        self.docente_1 = SimpleNamespace(
+            nombre="Docente 1",
+            horas_semanales_max=20,
+        )
+        self.docente_2 = SimpleNamespace(
+            nombre="Docente 2",
+            horas_semanales_max=20,
+        )
+        
         self.aula_1, self.aula_2 = object(), object()
 
         self.franja_a = FranjaSimple("Lunes", 7, 9)

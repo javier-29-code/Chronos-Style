@@ -21,6 +21,14 @@ class Horario:
             raise ValueError(
                 "El paralelo debe ser un objeto Paralelo."
             )
+            
+        duracion = franja.hora_fin - franja.hora_inicio
+
+        if duracion > docente.horas_semanales_max:
+            raise ValueError(
+                "La duración de la clase supera las horas "
+                "semanales máximas del docente."
+            )
 
         self._materia = materia.strip()
         self._docente = docente
