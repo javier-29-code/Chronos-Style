@@ -3,9 +3,10 @@
 from modelos.asignatura import Asignatura
 from modelos.aula import Aula
 from servicios.gestor_catalogos import GestorCatalogos
+from modelos.paralelo import Paralelo
 
 
-def crear_catalogos_con_datos_ejemplo(docentes):
+def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=()):
     """Recibe los docentes existentes para reutilizar sus objetos."""
     catalogos = GestorCatalogos()
 
@@ -47,5 +48,32 @@ def crear_catalogos_con_datos_ejemplo(docentes):
             tipo="Laboratorio de computación",
         )
     )
+    
+    paralelo_a = Paralelo(
+        codigo="TI-3-A",
+        carrera="Tecnologías de la Información",
+        semestre=3,
+        letra="A",
+    )
+
+    paralelo_b = Paralelo(
+        codigo="TI-3-B",
+        carrera="Tecnologías de la Información",
+        semestre=3,
+        letra="B",
+    )
+
+    # Para la demostración, inscribimos en A a los estudiantes
+    # de la misma carrera y semestre.
+    for estudiante in estudiantes:
+        if (
+            estudiante.carrera.strip().casefold()
+            == paralelo_a.carrera.casefold()
+            and estudiante.semestre == paralelo_a.semestre
+        ):
+            paralelo_a.inscribir_estudiante(estudiante)
+
+    catalogos.agregar_paralelo(paralelo_a)
+    catalogos.agregar_paralelo(paralelo_b)
 
     return catalogos

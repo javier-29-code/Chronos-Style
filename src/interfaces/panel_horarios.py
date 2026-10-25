@@ -16,6 +16,7 @@ class PanelHorarios(ttk.Frame):
         self._asignaturas = []
         self._docentes = []
         self._aulas = []
+        self._paralelos = []
 
         self._crear_interfaz()
         self.actualizar_catalogos()
@@ -56,6 +57,10 @@ class PanelHorarios(ttk.Frame):
         )
         self._fin = self._crear_selector(
             formulario, "Hora de fin:", 5
+        )
+        
+        self._paralelo = self._crear_selector(
+            formulario, "Paralelo:", 6
         )
 
         self._dia["values"] = FranjaHoraria.dias_validos
@@ -129,6 +134,9 @@ class PanelHorarios(ttk.Frame):
         self._aulas = list(
             self._catalogos.listar_aulas()
         )
+        self._paralelos = list(
+            self._catalogos.listar_paralelos()
+        )
 
         opciones = (
             (
@@ -152,6 +160,13 @@ class PanelHorarios(ttk.Frame):
                     for a in self._aulas
                 ],
             ),
+            (
+                self._paralelo,
+                [
+                    f"{p.codigo} — {p}"
+                    for p in self._paralelos
+                ],
+            ),
         )
 
         for selector, valores in opciones:
@@ -166,6 +181,9 @@ class PanelHorarios(ttk.Frame):
             faltantes.append("docentes")
         if not self._aulas:
             faltantes.append("aulas")
+            
+        if not self._paralelos:
+            faltantes.append("paralelos")
 
         if faltantes:
             self._boton_registrar.state(["disabled"])
@@ -206,6 +224,11 @@ class PanelHorarios(ttk.Frame):
                 self._aulas,
                 "un aula",
             )
+            paralelo = self._seleccionar(
+                self._paralelo,
+                self._paralelos,
+                "un paralelo",
+            )
 
             if self._dia.current() < 0:
                 raise ValueError("Selecciona un día.")
@@ -227,6 +250,7 @@ class PanelHorarios(ttk.Frame):
                 docente=docente,
                 aula=aula,
                 franja=franja,
+                paralelo=paralelo,
             )
 
             conflictos = self._horarios.agregar(horario)
@@ -278,17 +302,26 @@ class PanelHorarios(ttk.Frame):
 
     @staticmethod
     def _resumir(horario):
+        paralelo = (
+            horario.paralelo.codigo
+            if horario.paralelo is not None
+            else "Sin paralelo"
+        )
+
         return (
             f"{horario.materia} | {horario.franja} | "
             f"{horario.docente.nombre} | "
-            f"Aula {horario.aula.id_aula}"
+            f"Aula {horario.aula.id_aula} | "
+            f"Paralelo {paralelo}"
         )
 
     def _limpiar(self):
+        """Vacía los campos del formulario."""
         for selector in (
             self._asignatura,
             self._docente,
             self._aula,
+            self._paralelo,
             self._dia,
             self._inicio,
             self._fin,

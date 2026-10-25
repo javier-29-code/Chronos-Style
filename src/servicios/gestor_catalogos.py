@@ -3,7 +3,7 @@
 from modelos.asignatura import Asignatura
 from modelos.docente import Docente
 from modelos.aula import Aula
-
+from modelos.paralelo import Paralelo
 
 class GestorCatalogos:
     """Gestiona asignaturas, docentes y aulas en memoria."""
@@ -12,6 +12,7 @@ class GestorCatalogos:
         self._asignaturas = []
         self._docentes = []
         self._aulas = []
+        self._paralelos = []
 
     # ---------- Asignaturas ----------
 
@@ -94,6 +95,32 @@ class GestorCatalogos:
 
     def listar_aulas(self):
         return list(self._aulas)
+    
+        # ---------- Paralelos ----------
+
+    def agregar_paralelo(self, paralelo):
+        if not isinstance(paralelo, Paralelo):
+            raise ValueError(
+                "Solo se pueden agregar objetos Paralelo."
+            )
+
+        codigo = self._normalizar_identificador(
+            paralelo.codigo,
+            "El código del paralelo",
+        )
+
+        if any(
+            existente.codigo.strip().casefold() == codigo
+            for existente in self._paralelos
+        ):
+            raise ValueError(
+                "Ya existe un paralelo con ese código."
+            )
+
+        self._paralelos.append(paralelo)
+
+    def listar_paralelos(self):
+        return list(self._paralelos)
 
     # ---------- Validación común ----------
 

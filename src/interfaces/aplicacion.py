@@ -9,6 +9,7 @@ from servicios.datos_ejemplo import crear_catalogos_con_datos_ejemplo
 from interfaces.ventana_login import VentanaLogin
 from interfaces.ventana_principal import VentanaPrincipal
 
+from modelos.estudiante import Estudiante
 
 def iniciar_aplicacion():
     # Los servicios se crean una sola vez, antes del ciclo de sesiones.
@@ -20,7 +21,17 @@ def iniciar_aplicacion():
         if isinstance(usuario, Docente)
     ]
 
-    gestor_catalogos = crear_catalogos_con_datos_ejemplo(docentes)
+    estudiantes = [
+        usuario
+        for usuario in gestor_usuarios.listar()
+        if isinstance(usuario, Estudiante)
+    ]
+
+    gestor_catalogos = crear_catalogos_con_datos_ejemplo(
+        docentes=docentes,
+        estudiantes=estudiantes,
+    )
+    
     gestor_horarios = GestorHorarios()
 
     while True:

@@ -6,11 +6,23 @@ from modelos.franja_horaria import FranjaHoraria
 
 
 class PanelConsultaHorarios(ttk.Frame):
-    def __init__(self, master, gestor_horarios, docente=None):
+    def __init__(
+        self,
+        master,
+        gestor_horarios,
+        docente=None,
+        estudiante=None,
+    ):
         super().__init__(master, padding=20)
+
+        if docente is not None and estudiante is not None:
+            raise ValueError(
+                "La consulta debe ser de docente o estudiante."
+            )
 
         self._gestor_horarios = gestor_horarios
         self._docente = docente
+        self._estudiante = estudiante
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
@@ -22,10 +34,13 @@ class PanelConsultaHorarios(ttk.Frame):
         ttk.Label(
             self,
             text=(
-            "Mi horario docente"
-            if self._docente is not None
-            else "Horarios registrados"
-        ),
+                "Mi horario"
+                if (
+                    self._docente is not None
+                    or self._estudiante is not None
+                )
+                else "Horarios registrados"
+            ),
             font=("Segoe UI", 17, "bold"),
         ).grid(row=0, column=0, sticky="w", pady=(0, 15))
 
@@ -68,6 +83,7 @@ class PanelConsultaHorarios(ttk.Frame):
 
         columnas = (
             "materia",
+            "paralelo",
             "docente",
             "aula",
             "dia",
@@ -84,6 +100,7 @@ class PanelConsultaHorarios(ttk.Frame):
 
         configuracion = (
             ("materia", "Asignatura", 230),
+            ("paralelo", "Paralelo", 110),
             ("docente", "Docente", 170),
             ("aula", "Aula", 90),
             ("dia", "Día", 100),
@@ -135,13 +152,26 @@ class PanelConsultaHorarios(ttk.Frame):
             self._tabla.delete(fila)
 
         horarios = self._gestor_horarios.listar()
+
         if self._docente is not None:
             horarios = [
                 horario
                 for horario in horarios
                 if horario.docente is self._docente
             ]
-            
+
+        elif self._estudiante is not None:
+            horarios = [
+                horario
+                for horario in horarios
+                if (
+                    horario.paralelo is not None
+                    and horario.paralelo.contiene_estudiante(
+                        self._estudiante
+                    )
+                )
+            ]
+
         dia_seleccionado = self._filtro_dia.get()
 
         visibles = [
@@ -172,6 +202,11 @@ class PanelConsultaHorarios(ttk.Frame):
                 "end",
                 values=(
                     horario.materia,
+                    (
+                        horario.paralelo.codigo
+                        if horario.paralelo is not None
+                        else "Sin paralelo"
+                    ),
                     horario.docente.nombre,
                     horario.aula.id_aula,
                     horario.franja.dia,
