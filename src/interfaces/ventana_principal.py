@@ -138,6 +138,7 @@ class VentanaPrincipal(tk.Tk):
                 self._panel_consulta = PanelConsultaHorarios(
                     master=cuaderno,
                     gestor_horarios=self._gestor_horarios,
+                    usuario=self._usuario,
                 )
 
                 cuaderno.add(

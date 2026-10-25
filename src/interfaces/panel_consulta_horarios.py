@@ -3,6 +3,7 @@
 from tkinter import ttk
 
 from modelos.franja_horaria import FranjaHoraria
+from tkinter import ttk, messagebox
 
 
 class PanelConsultaHorarios(ttk.Frame):
@@ -12,6 +13,7 @@ class PanelConsultaHorarios(ttk.Frame):
         gestor_horarios,
         docente=None,
         estudiante=None,
+        usuario=None,
     ):
         super().__init__(master, padding=20)
 
@@ -23,6 +25,8 @@ class PanelConsultaHorarios(ttk.Frame):
         self._gestor_horarios = gestor_horarios
         self._docente = docente
         self._estudiante = estudiante
+        self._usuario = usuario
+        self._horarios_por_fila = {}
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
@@ -75,6 +79,13 @@ class PanelConsultaHorarios(ttk.Frame):
             text="Actualizar",
             command=self.actualizar,
         ).pack(side="right")
+        
+        if self._puede_eliminar():
+            ttk.Button(
+                herramientas,
+                text="Eliminar seleccionado",
+                command=self._eliminar_seleccionado,
+            ).pack(side="right", padx=10)
 
         contenedor = ttk.Frame(self)
         contenedor.grid(row=2, column=0, sticky="nsew")
@@ -151,6 +162,9 @@ class PanelConsultaHorarios(ttk.Frame):
         for fila in self._tabla.get_children():
             self._tabla.delete(fila)
 
+        # Limpia las referencias de las filas anteriores.
+        self._horarios_por_fila.clear()
+
         horarios = self._gestor_horarios.listar()
 
         if self._docente is not None:
@@ -197,7 +211,8 @@ class PanelConsultaHorarios(ttk.Frame):
         )
 
         for horario in visibles:
-            self._tabla.insert(
+            # Guarda el identificador que devuelve Treeview.
+            fila = self._tabla.insert(
                 "",
                 "end",
                 values=(
@@ -215,6 +230,9 @@ class PanelConsultaHorarios(ttk.Frame):
                 ),
             )
 
+            # Relaciona esta fila con el objeto Horario original.
+            self._horarios_por_fila[fila] = horario
+
         if not horarios:
             texto = "Todavía no hay horarios registrados."
         elif not visibles:
@@ -226,3 +244,79 @@ class PanelConsultaHorarios(ttk.Frame):
             )
 
         self._estado.configure(text=texto)
+        
+    def _puede_eliminar(self):
+        comprobar_permiso = getattr(
+            self._usuario,
+            "tiene_permiso",
+            None,
+        )
+
+        return (
+            callable(comprobar_permiso)
+            and comprobar_permiso("gestionar_horarios")
+        )
+
+    def _eliminar_seleccionado(self):
+        # Se comprueba también al ejecutar la acción.
+        if not self._puede_eliminar():
+            messagebox.showerror(
+                "Acceso denegado",
+                "No tienes permiso para eliminar horarios.",
+                parent=self,
+            )
+            return
+
+        seleccion = self._tabla.selection()
+
+        if not seleccion:
+            messagebox.showwarning(
+                "Selecciona un horario",
+                "Selecciona una fila de la tabla.",
+                parent=self,
+            )
+            return
+
+        horario = self._horarios_por_fila.get(seleccion[0])
+
+        if horario is None:
+            self.actualizar()
+            return
+
+        confirmar = messagebox.askyesno(
+            "Eliminar horario",
+            (
+                "¿Deseas eliminar esta clase?\n\n"
+                f"Asignatura: {horario.materia}\n"
+                f"Docente: {horario.docente.nombre}\n"
+                f"Aula: {horario.aula.id_aula}\n"
+                f"Franja: {horario.franja}"
+            ),
+            parent=self,
+        )
+
+        if not confirmar:
+            return
+
+        try:
+            self._gestor_horarios.eliminar(horario)
+        except ValueError as error:
+            messagebox.showerror(
+                "No se pudo eliminar",
+                str(error),
+                parent=self,
+            )
+            self.actualizar()
+            return
+
+        self.actualizar()
+
+        self._estado.configure(
+            text="Horario eliminado correctamente."
+        )
+
+        self.event_generate(
+            "<<HorariosActualizados>>",
+            when="tail",
+        )
+        
