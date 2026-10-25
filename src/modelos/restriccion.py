@@ -66,3 +66,20 @@ class RestriccionAula(Restriccion):
     def _choca(self, horario_nuevo, horario_existente):
         return (horario_nuevo.se_solapa_con(horario_existente)
                 and horario_nuevo.tiene_misma_aula(horario_existente))
+        
+class RestriccionParalelo(Restriccion):
+    """Un paralelo no puede recibir dos clases al mismo tiempo."""
+
+    def __init__(self):
+        super().__init__(
+            "Paralelo sin choques",
+            "El paralelo ya tiene clase en esa franja",
+        )
+
+    def _choca(self, horario_nuevo, horario_existente):
+        return (
+            horario_nuevo.se_solapa_con(horario_existente)
+            and horario_nuevo.tiene_mismo_paralelo(
+                horario_existente
+            )
+        )

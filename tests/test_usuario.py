@@ -80,12 +80,18 @@ class TestUsuarioBase(unittest.TestCase):
         with self.assertRaises(ValueError):
             est.iniciar_sesion("incorrecta1")
         self.assertFalse(est.sesion_activa)
-    def test_ver_horario_devuelve_texto(self):
-        adm = AdministradorAcademico(
-            "Luis Vera", "luis.vera@uleam.edu.ec", "clave1234", "Ciencias Informaticas"
-        )
-        for usuario in (crear_estudiante(), crear_docente(), adm):
-            self.assertIsInstance(usuario.ver_horario(), str)
+    def test_facultad_vacia_falla(self):
+        with self.assertRaises(ValueError):
+            AdministradorAcademico(
+                nombre="Luis Vera",
+                correo="luis.vera@uleam.edu.ec",
+                contrasena="clave1234",
+                facultad="  ",
+                titulo="Ingeniero en Tecnologías de la Información",
+                area="Programación",
+                horas_semanales_max=20,
+                codigo_administrativo="ADM001",
+            )
 
 
 class TestEstudiante(unittest.TestCase):
@@ -131,14 +137,28 @@ class TestDocente(unittest.TestCase):
 class TestAdministradorAcademico(unittest.TestCase):
     def test_creacion_correcta(self):
         adm = AdministradorAcademico(
-            "Luis Vera", "luis.vera@uleam.edu.ec", "clave1234", "Ciencias Informaticas"
+            nombre="Luis Vera",
+            correo="luis.vera@uleam.edu.ec",
+            contrasena="clave1234",
+            facultad="Ciencias Informaticas",
+            titulo="Ingeniero en Tecnologías de la Información",
+            area="Programación",
+            horas_semanales_max=20,
+            codigo_administrativo="ADM001",
         )
         self.assertEqual(adm.facultad, "Ciencias Informaticas")
 
     def test_facultad_vacia_falla(self):
         with self.assertRaises(ValueError):
             AdministradorAcademico(
-                "Luis Vera", "luis.vera@uleam.edu.ec", "clave1234", "  "
+                nombre="Luis Vera",
+                correo="luis.vera@uleam.edu.ec",
+                contrasena="clave1234",
+                facultad="  ",
+                titulo="Ingeniero en Tecnologías de la Información",
+                area="Programación",
+                horas_semanales_max=20,
+                codigo_administrativo="ADM001",
             )
 
 

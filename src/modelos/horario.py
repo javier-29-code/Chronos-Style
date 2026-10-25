@@ -3,9 +3,10 @@
 # qué materia, con qué docente, en qué aula y en qué franja.
 # El día y las horas ya los maneja FranjaHoraria, así que aquí no se repiten.
 
+from modelos.paralelo import Paralelo
 
 class Horario:
-    def __init__(self, materia, docente, aula, franja):
+    def __init__(self, materia, docente, aula, franja, paralelo=None):
         # materia: texto con el nombre de la materia
         # docente: objeto Docente
         # aula: objeto Aula (o Laboratorio)
@@ -15,11 +16,17 @@ class Horario:
             raise ValueError("La materia no puede estar vacía")
         if docente is None or aula is None or franja is None:
             raise ValueError("Docente, aula y franja son obligatorios")
+        
+        if paralelo is not None and not isinstance(paralelo, Paralelo):
+            raise ValueError(
+                "El paralelo debe ser un objeto Paralelo."
+            )
 
         self._materia = materia.strip()
         self._docente = docente
         self._aula = aula
         self._franja = franja
+        self._paralelo = paralelo
 
     # ---------- Propiedades (lectura) ----------
     @property
@@ -37,6 +44,10 @@ class Horario:
     @property
     def franja(self):
         return self._franja
+    
+    @property
+    def paralelo(self):
+        return self._paralelo
 
     # ---------- Comprobaciones de conflicto ----------
     def se_solapa_con(self, otro):
@@ -50,10 +61,23 @@ class Horario:
         return self._aula is otro.aula
 
     def tiene_conflicto_con(self, otro):
-        # Hay conflicto si se cruzan en el tiempo y comparten docente o aula
         if not self.se_solapa_con(otro):
             return False
-        return self.tiene_mismo_docente(otro) or self.tiene_misma_aula(otro)
+
+        return (
+            self.tiene_mismo_docente(otro)
+            or self.tiene_misma_aula(otro)
+            or self.tiene_mismo_paralelo(otro)
+        )
+    
+    def tiene_mismo_paralelo(self, otro):
+        if self.paralelo is None or otro.paralelo is None:
+            return False
+
+        return (
+            self.paralelo.codigo.strip().casefold()
+            == otro.paralelo.codigo.strip().casefold()
+        )
 
     # ---------- Mostrar ----------
     def mostrar_informacion(self):
