@@ -139,6 +139,7 @@ class VentanaPrincipal(tk.Tk):
                     master=cuaderno,
                     gestor_horarios=self._gestor_horarios,
                     usuario=self._usuario,
+                    gestor_catalogos=self._gestor_catalogos,
                 )
 
                 cuaderno.add(

@@ -5,6 +5,8 @@ from tkinter import ttk
 from modelos.franja_horaria import FranjaHoraria
 from tkinter import ttk, messagebox
 
+from interfaces.dialogo_editar_horario import DialogoEditarHorario
+
 
 class PanelConsultaHorarios(ttk.Frame):
     def __init__(
@@ -14,6 +16,7 @@ class PanelConsultaHorarios(ttk.Frame):
         docente=None,
         estudiante=None,
         usuario=None,
+        gestor_catalogos = None,
     ):
         super().__init__(master, padding=20)
 
@@ -27,6 +30,8 @@ class PanelConsultaHorarios(ttk.Frame):
         self._estudiante = estudiante
         self._usuario = usuario
         self._horarios_por_fila = {}
+        
+        self._gestor_catalogos = gestor_catalogos
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
@@ -87,6 +92,16 @@ class PanelConsultaHorarios(ttk.Frame):
                 command=self._eliminar_seleccionado,
             ).pack(side="right", padx=10)
 
+        if (
+            self._puede_eliminar()
+            and self._gestor_catalogos is not None
+        ):
+            ttk.Button(
+                herramientas,
+                text="Editar seleccionado",
+                command=self._editar_seleccionado,
+            ).pack(side="right", padx=5)
+            
         contenedor = ttk.Frame(self)
         contenedor.grid(row=2, column=0, sticky="nsew")
         contenedor.columnconfigure(0, weight=1)
@@ -320,3 +335,53 @@ class PanelConsultaHorarios(ttk.Frame):
             when="tail",
         )
         
+    def _editar_seleccionado(self):
+        if not self._puede_eliminar():
+            messagebox.showerror(
+                "Acceso denegado",
+                "No tienes permiso para editar horarios.",
+                parent=self,
+            )
+            return
+
+        if self._gestor_catalogos is None:
+            return
+
+        seleccion = self._tabla.selection()
+
+        if not seleccion:
+            messagebox.showwarning(
+                "Selecciona un horario",
+                "Selecciona una fila de la tabla.",
+                parent=self,
+            )
+            return
+
+        horario = self._horarios_por_fila.get(seleccion[0])
+
+        if horario is None:
+            self.actualizar()
+            return
+
+        dialogo = DialogoEditarHorario(
+            master=self,
+            horario=horario,
+            gestor_catalogos=self._gestor_catalogos,
+            gestor_horarios=self._gestor_horarios,
+            usuario=self._usuario,
+            al_guardar=self._despues_de_editar,
+        )
+
+        self.wait_window(dialogo)
+
+    def _despues_de_editar(self):
+        self.actualizar()
+
+        self._estado.configure(
+            text="Horario actualizado correctamente."
+        )
+
+        self.event_generate(
+            "<<HorariosActualizados>>",
+            when="tail",
+        )
