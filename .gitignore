@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Base de datos local de Chronos-Style
+/datos/*.db
+/datos/*.db-journal
+/datos/*.db-wal
+/datos/*.db-shm

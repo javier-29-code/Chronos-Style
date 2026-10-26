@@ -3,13 +3,15 @@
 from modelos.docente import Docente
 
 from servicios.gestor_usuarios import crear_gestor_con_datos_ejemplo
-from servicios.gestor_horarios import GestorHorarios
 from servicios.datos_ejemplo import crear_catalogos_con_datos_ejemplo
 
 from interfaces.ventana_login import VentanaLogin
 from interfaces.ventana_principal import VentanaPrincipal
 
 from modelos.estudiante import Estudiante
+
+from pathlib import Path
+from servicios.gestor_horarios_sqlite import GestorHorariosSQLite
 
 def iniciar_aplicacion():
     # Los servicios se crean una sola vez, antes del ciclo de sesiones.
@@ -32,7 +34,13 @@ def iniciar_aplicacion():
         estudiantes=estudiantes,
     )
     
-    gestor_horarios = GestorHorarios()
+    raiz_proyecto = Path(__file__).resolve().parents[2]
+    ruta_base = raiz_proyecto / "datos" / "chronos.db"
+
+    gestor_horarios = GestorHorariosSQLite(
+        ruta=ruta_base,
+        catalogos=gestor_catalogos,
+    )
 
     while True:
         login = VentanaLogin(gestor_usuarios)
