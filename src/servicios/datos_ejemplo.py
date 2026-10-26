@@ -7,32 +7,35 @@ from modelos.paralelo import Paralelo
 from modelos.aula_teorica import AulaTeorica
 
 
-def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=(),repositorio_aulas=None,):
+def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=(),repositorio_aulas=None, repositorio_asignaturas=None,):
     """Prepara catálogos y utiliza aulas persistentes si se proporcionan."""
     catalogos = GestorCatalogos(
         repositorio_aulas=repositorio_aulas,
+        repositorio_asignaturas=repositorio_asignaturas,
     )
 
     for docente in docentes:
         catalogos.agregar_docente(docente)
 
-    catalogos.agregar_asignatura(
-        Asignatura(
-            codigo="POO",
-            nombre="Programación Orientada a Objetos",
-            creditos=3,
-            horas_semanales=4,
+    if not catalogos.listar_asignaturas():
+        catalogos.agregar_asignatura(
+            Asignatura(
+                codigo="POO",
+                nombre="Programación Orientada a Objetos",
+                creditos=3,
+                horas_semanales=4,
+            )
         )
-    )
 
-    catalogos.agregar_asignatura(
-        Asignatura(
-            codigo="BD",
-            nombre="Base de Datos",
-            creditos=3,
-            horas_semanales=4,
+        catalogos.agregar_asignatura(
+            Asignatura(
+                codigo="BD",
+                nombre="Base de Datos",
+                creditos=3,
+                horas_semanales=4,
+            )
         )
-    )
+        
 
     # Los ejemplos se crean únicamente si no hay aulas guardadas.
     if not catalogos.listar_aulas():

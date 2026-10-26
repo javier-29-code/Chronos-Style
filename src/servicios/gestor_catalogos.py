@@ -10,16 +10,24 @@ import sqlite3
 class GestorCatalogos:
     """Gestiona asignaturas, docentes y aulas en memoria."""
 
-    def __init__(self, repositorio_aulas=None):
-        self._asignaturas = []
+    def __init__(self, repositorio_aulas=None, repositorio_asignaturas=None,):
+        self._repositorio_aulas = repositorio_aulas
+        self._repositorio_asignaturas = (
+            repositorio_asignaturas
+        )
+
         self._docentes = []
         self._paralelos = []
-
-        self._repositorio_aulas = repositorio_aulas
 
         self._aulas = (
             repositorio_aulas.listar()
             if repositorio_aulas is not None
+            else []
+        )
+
+        self._asignaturas = (
+            repositorio_asignaturas.listar()
+            if repositorio_asignaturas is not None
             else []
         )
 
@@ -49,6 +57,16 @@ class GestorCatalogos:
             )
 
         self._asignaturas.append(asignatura)
+        
+        if self._repositorio_asignaturas is not None:
+            try:
+                self._repositorio_asignaturas.guardar(
+                    asignatura
+                )
+            except sqlite3.Error as error:
+                raise ValueError(
+                    f"No se pudo guardar la asignatura: {error}"
+                ) from error
 
     def listar_asignaturas(self):
         return list(self._asignaturas)
