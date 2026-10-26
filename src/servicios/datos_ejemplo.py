@@ -4,6 +4,7 @@ from modelos.asignatura import Asignatura
 from modelos.aula import Aula
 from servicios.gestor_catalogos import GestorCatalogos
 from modelos.paralelo import Paralelo
+from modelos.aula_teorica import AulaTeorica
 
 
 def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=()):
@@ -32,11 +33,12 @@ def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=()):
     )
 
     catalogos.agregar_aula(
-        Aula(
+        AulaTeorica(
             id_aula="A101",
             edificio="Edificio A",
             capacidad=30,
-            tipo="Teórica",
+            tiene_proyector=False,
+            tiene_pantalla_tactil=True,
         )
     )
 
