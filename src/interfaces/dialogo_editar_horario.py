@@ -162,18 +162,38 @@ class DialogoEditarHorario(tk.Toplevel):
                 self._docente,
                 self._docentes,
                 self._original.docente,
+                "correo",
             ),
             (
                 self._aula,
                 self._aulas,
                 self._original.aula,
+                "id_aula",
             ),
             (
                 self._paralelo,
                 self._paralelos,
                 self._original.paralelo,
+                "codigo",
             ),
         )
+
+        for selector, objetos, actual, atributo in selecciones:
+            if actual is None:
+                continue
+
+            identificador_actual = (
+                getattr(actual, atributo).strip().casefold()
+            )
+
+            for indice, objeto in enumerate(objetos):
+                identificador = (
+                    getattr(objeto, atributo).strip().casefold()
+                )
+
+                if identificador == identificador_actual:
+                    selector.current(indice)
+                    break
 
         for selector, objetos, actual in selecciones:
             for indice, objeto in enumerate(objetos):

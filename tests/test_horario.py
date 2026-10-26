@@ -21,14 +21,17 @@ class TestHorario(unittest.TestCase):
     def setUp(self):
         self.docente_1 = SimpleNamespace(
             nombre="Docente 1",
+            correo="docente1@uleam.edu.ec",
             horas_semanales_max=20,
         )
         self.docente_2 = SimpleNamespace(
             nombre="Docente 2",
+            correo="docente2@uleam.edu.ec",
             horas_semanales_max=20,
         )
-        self.aula_1 = object()
-        self.aula_2 = object()
+
+        self.aula_1 = SimpleNamespace(id_aula="A101")
+        self.aula_2 = SimpleNamespace(id_aula="A102")
 
     def test_conflicto_mismo_docente(self):
         a = Horario("POO", self.docente_1, self.aula_1, FranjaFalsa(True))

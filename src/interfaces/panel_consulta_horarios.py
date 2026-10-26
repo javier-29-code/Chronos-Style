@@ -183,10 +183,17 @@ class PanelConsultaHorarios(ttk.Frame):
         horarios = self._gestor_horarios.listar()
 
         if self._docente is not None:
+            correo_docente = (
+                self._docente.correo.strip().casefold()
+            )
+
             horarios = [
                 horario
                 for horario in horarios
-                if horario.docente is self._docente
+                if (
+                    horario.docente.correo.strip().casefold()
+                    == correo_docente
+                )
             ]
 
         elif self._estudiante is not None:

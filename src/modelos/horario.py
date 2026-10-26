@@ -63,10 +63,16 @@ class Horario:
         return self._franja.se_solapa_con(otro.franja)
 
     def tiene_mismo_docente(self, otro):
-        return self._docente is otro.docente
+        return (
+            self.docente.correo.strip().casefold()
+            == otro.docente.correo.strip().casefold()
+        )
 
     def tiene_misma_aula(self, otro):
-        return self._aula is otro.aula
+        return (
+            self.aula.id_aula.strip().casefold()
+            == otro.aula.id_aula.strip().casefold()
+        )
 
     def tiene_conflicto_con(self, otro):
         if not self.se_solapa_con(otro):

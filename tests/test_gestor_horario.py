@@ -33,15 +33,18 @@ class TestGestorHorarios(unittest.TestCase):
         # Docentes y aulas de prueba: objetos simples, igual que en test_restriccion
         self.docente_1 = SimpleNamespace(
             nombre="Docente 1",
+            correo="docente1@uleam.edu.ec",
             horas_semanales_max=20,
         )
         self.docente_2 = SimpleNamespace(
             nombre="Docente 2",
+            correo="docente2@uleam.edu.ec",
             horas_semanales_max=20,
         )
-        
-        self.aula_1, self.aula_2 = object(), object()
 
+        self.aula_1 = SimpleNamespace(id_aula="A101")
+        self.aula_2 = SimpleNamespace(id_aula="A102")
+        
         self.franja_a = FranjaSimple("Lunes", 7, 9)
         self.franja_b = FranjaSimple("Lunes", 8, 10)   # se solapa con A
         self.franja_c = FranjaSimple("Martes", 7, 9)   # no se solapa con A

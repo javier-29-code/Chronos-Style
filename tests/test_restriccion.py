@@ -22,13 +22,17 @@ class TestRestriccion(unittest.TestCase):
     def setUp(self):
         self.doc_1 = SimpleNamespace(
             nombre="Docente 1",
+            correo="docente1@uleam.edu.ec",
             horas_semanales_max=20,
         )
         self.doc_2 = SimpleNamespace(
             nombre="Docente 2",
+            correo="docente2@uleam.edu.ec",
             horas_semanales_max=20,
         )
-        self.aula_1, self.aula_2 = object(), object()
+
+        self.aula_1 = SimpleNamespace(id_aula="A101")
+        self.aula_2 = SimpleNamespace(id_aula="A102")
         self.nuevo = Horario("POO", self.doc_1, self.aula_1, FranjaFalsa(True))
 
     def test_docente_detecta_choque(self):
