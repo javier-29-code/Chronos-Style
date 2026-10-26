@@ -5,14 +5,23 @@ from modelos.docente import Docente
 from modelos.aula import Aula
 from modelos.paralelo import Paralelo
 
+import sqlite3
+
 class GestorCatalogos:
     """Gestiona asignaturas, docentes y aulas en memoria."""
 
-    def __init__(self):
+    def __init__(self, repositorio_aulas=None):
         self._asignaturas = []
         self._docentes = []
-        self._aulas = []
         self._paralelos = []
+
+        self._repositorio_aulas = repositorio_aulas
+
+        self._aulas = (
+            repositorio_aulas.listar()
+            if repositorio_aulas is not None
+            else []
+        )
 
     # ---------- Asignaturas ----------
 
@@ -73,14 +82,14 @@ class GestorCatalogos:
     # ---------- Aulas ----------
 
     def agregar_aula(self, aula):
-        # También acepta las clases que heredan de Aula.
         if not isinstance(aula, Aula):
             raise ValueError(
                 "Solo se pueden agregar objetos Aula."
             )
 
         identificador = self._normalizar_identificador(
-            aula.id_aula, "El identificador del aula"
+            aula.id_aula,
+            "El identificador del aula",
         )
 
         if any(
@@ -90,6 +99,15 @@ class GestorCatalogos:
             raise ValueError(
                 "Ya existe un aula con ese identificador."
             )
+
+        # Guardamos antes de modificar la lista en memoria.
+        if self._repositorio_aulas is not None:
+            try:
+                self._repositorio_aulas.guardar(aula)
+            except sqlite3.Error as error:
+                raise ValueError(
+                    f"No se pudo guardar el aula: {error}"
+                ) from error
 
         self._aulas.append(aula)
 

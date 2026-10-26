@@ -7,9 +7,11 @@ from modelos.paralelo import Paralelo
 from modelos.aula_teorica import AulaTeorica
 
 
-def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=()):
-    """Recibe los docentes existentes para reutilizar sus objetos."""
-    catalogos = GestorCatalogos()
+def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=(),repositorio_aulas=None,):
+    """Prepara catálogos y utiliza aulas persistentes si se proporcionan."""
+    catalogos = GestorCatalogos(
+        repositorio_aulas=repositorio_aulas,
+    )
 
     for docente in docentes:
         catalogos.agregar_docente(docente)
@@ -32,24 +34,26 @@ def crear_catalogos_con_datos_ejemplo(docentes, estudiantes=()):
         )
     )
 
-    catalogos.agregar_aula(
-        AulaTeorica(
-            id_aula="A101",
-            edificio="Edificio A",
-            capacidad=30,
-            tiene_proyector=False,
-            tiene_pantalla_tactil=True,
+    # Los ejemplos se crean únicamente si no hay aulas guardadas.
+    if not catalogos.listar_aulas():
+        catalogos.agregar_aula(
+            AulaTeorica(
+                id_aula="A101",
+                edificio="Edificio A",
+                capacidad=30,
+                tiene_proyector=False,
+                tiene_pantalla_tactil=True,
+            )
         )
-    )
 
-    catalogos.agregar_aula(
-        Aula(
-            id_aula="LAB01",
-            edificio="Edificio B",
-            capacidad=25,
-            tipo="Laboratorio de computación",
+        catalogos.agregar_aula(
+            Aula(
+                id_aula="LAB01",
+                edificio="Edificio B",
+                capacidad=25,
+                tipo="Laboratorio de computación",
+            )
         )
-    )
     
     paralelo_a = Paralelo(
         codigo="TI-3-A",
