@@ -251,6 +251,7 @@ class PanelHorarios(ttk.Frame):
                 aula=aula,
                 franja=franja,
                 paralelo=paralelo,
+                asignatura=asignatura,
             )
 
             conflictos = self._horarios.agregar(horario)

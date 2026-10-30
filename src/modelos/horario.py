@@ -4,9 +4,11 @@
 # El día y las horas ya los maneja FranjaHoraria, así que aquí no se repiten.
 
 from modelos.paralelo import Paralelo
+from modelos.asignatura import Asignatura
 
 class Horario:
-    def __init__(self, materia, docente, aula, franja, paralelo=None):
+    def __init__(
+        self, materia, docente, aula, franja, paralelo=None, *, asignatura=None,):
         # materia: texto con el nombre de la materia
         # docente: objeto Docente
         # aula: objeto Aula (o Laboratorio)
@@ -14,6 +16,25 @@ class Horario:
         # Validaciones: no se permite crear un Horario incompleto
         if not isinstance(materia, str) or not materia.strip():
             raise ValueError("La materia no puede estar vacía")
+        
+        if asignatura is not None:
+            if not isinstance(asignatura, Asignatura):
+                raise ValueError(
+                    "La asignatura debe ser un objeto Asignatura."
+                )
+
+            referencia = materia.strip().casefold()
+
+            referencias_validas = {
+                asignatura.codigo.strip().casefold(),
+                asignatura.nombre.strip().casefold(),
+            }
+
+            if referencia not in referencias_validas:
+                raise ValueError(
+                    "La materia no corresponde a la asignatura indicada."
+                )
+                
         if docente is None or aula is None or franja is None:
             raise ValueError("Docente, aula y franja son obligatorios")
         
@@ -35,12 +56,28 @@ class Horario:
         self._aula = aula
         self._franja = franja
         self._paralelo = paralelo
+        self._asignatura = asignatura
 
     # ---------- Propiedades (lectura) ----------
     @property
     def materia(self):
+        """Nombre utilizado por las pantallas existentes."""
+        if self._asignatura is not None:
+            return self._asignatura.nombre
+
         return self._materia
 
+    @property
+    def asignatura(self):
+        return self._asignatura
+
+    @property
+    def asignatura_codigo(self):
+        if self._asignatura is None:
+            return None
+
+        return self._asignatura.codigo
+    
     @property
     def docente(self):
         return self._docente
@@ -95,7 +132,7 @@ class Horario:
 
     # ---------- Mostrar ----------
     def mostrar_informacion(self):
-        return (f"{self._materia} | {self._franja} | "
+        return (f"{self.materia} | {self._franja} | "
                 f"Aula: {self._aula} | Docente: {self._docente}")
 
     def __str__(self):

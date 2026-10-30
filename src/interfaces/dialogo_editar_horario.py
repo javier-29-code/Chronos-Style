@@ -153,7 +153,21 @@ class DialogoEditarHorario(tk.Toplevel):
 
     def _cargar_datos_actuales(self):
         for indice, asignatura in enumerate(self._asignaturas):
-            if asignatura.nombre == self._original.materia:
+            if self._original.asignatura_codigo is not None:
+                coincide = (
+                    asignatura.codigo.strip().casefold()
+                    == self._original.asignatura_codigo.strip().casefold()
+                )
+            else:
+                # Compatibilidad temporal con horarios antiguos.
+                referencia = self._original.materia.strip().casefold()
+
+                coincide = referencia in {
+                    asignatura.codigo.strip().casefold(),
+                    asignatura.nombre.strip().casefold(),
+                }
+
+            if coincide:
                 self._asignatura.current(indice)
                 break
 
@@ -265,6 +279,7 @@ class DialogoEditarHorario(tk.Toplevel):
                 aula=aula,
                 franja=franja,
                 paralelo=paralelo,
+                asignatura=asignatura,
             )
 
             conflictos = self._gestor.actualizar(
