@@ -1,0 +1,148 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}{{ titulo }} · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">CATÁLOGO ACADÉMICO</p>
+        <h1>{{ titulo }}</h1>
+        <p class="muted">{{ descripcion }}</p>
+    </div>
+
+    {% if puede_agregar %}
+        <a class="button" href="{{ url_nuevo }}">Agregar</a>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <form method="get" class="proposal-actions">
+        <div class="form-field">
+            <label for="busqueda">Buscar</label>
+            <input id="busqueda" name="q" value="{{ busqueda }}">
+        </div>
+
+        <div class="form-field">
+            <label for="estado">Mostrar</label>
+            <select id="estado" name="estado">
+                <option value="activos"
+                    {% if estado == "activos" %}selected{% endif %}>
+                    Activos
+                </option>
+                <option value="retirados"
+                    {% if estado == "retirados" %}selected{% endif %}>
+                    Retirados
+                </option>
+                <option value="todos"
+                    {% if estado == "todos" %}selected{% endif %}>
+                    Todos
+                </option>
+            </select>
+        </div>
+
+        <button class="button-quiet" type="submit">Buscar</button>
+    </form>
+
+    <p class="muted">{{ pagina.paginator.count }} registros</p>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Identificación</th>
+                    <th>Información</th>
+                    <th>Estado</th>
+                    <th>Acciones
+                        {% if fila.url_acceso and puede_habilitar %}
+                            <a class="button-quiet" href="{{ fila.url_acceso }}">
+                                Habilitar acceso
+                            </a>
+                        {% endif %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in filas %}
+                    <tr>
+                        <td>{{ fila.identificador }}</td>
+                        <td>
+                            <strong>{{ fila.nombre }}</strong>
+                            <small>{{ fila.detalle }}</small>
+                        </td>
+                        <td>
+                            {% if fila.activo %}
+                                <span class="badge">Activo</span>
+                            {% else %}
+                                <span class="muted">Retirado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if puede_cambiar %}
+                                <form method="post"
+                                      action="{{ fila.url_estado }}">
+                                    {% csrf_token %}
+
+                                    {% if fila.url_editar %}
+                                        <a class="button-quiet" href="{{ fila.url_editar }}">
+                                            Editar
+                                        </a>
+                                    {% endif %}
+
+                                    {% if fila.activo %}
+                                        <input type="hidden"
+                                               name="estado"
+                                               value="retirado">
+                                        <button class="button-quiet"
+                                                type="submit">
+                                            Retirar del catálogo
+                                        </button>
+                                    {% else %}
+                                        <input type="hidden"
+                                               name="estado"
+                                               value="activo">
+                                        <button class="button-quiet"
+                                                type="submit">
+                                            Reactivar
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            No hay registros que coincidan con los filtros.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<p class="muted">
+    Retirar un registro lo excluye de nuevas generaciones.
+    Sus clases oficiales e historial se conservan.
+</p>
+
+<div class="proposal-actions">
+    {% if pagina.has_previous %}
+        <a class="button-quiet"
+           href="?{{ filtros }}&amp;pagina={{ pagina.previous_page_number }}">
+            Anterior
+        </a>
+    {% endif %}
+
+    <span class="muted">
+        Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+    </span>
+
+    {% if pagina.has_next %}
+        <a class="button-quiet"
+           href="?{{ filtros }}&amp;pagina={{ pagina.next_page_number }}">
+            Siguiente
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

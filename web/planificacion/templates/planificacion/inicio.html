@@ -1,0 +1,161 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Inicio · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">TU ESPACIO DE PLANIFICACIÓN</p>
+        <h1>Todo en su momento.</h1>
+        <p class="muted">
+            {% if puede_ver_todos %}
+                Consulta la planificación académica del periodo.
+            {% else %}
+                Consulta tus clases y espacios asignados.
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<section class="panel calendar-filters" aria-label="Filtros del horario">
+    <form method="get">
+        {{ filtros_horario.non_field_errors }}
+
+        <div class="calendar-filter-fields">
+            {% for campo in filtros_horario %}
+                <div class="form-field">
+                    {{ campo.label_tag }}
+                    {{ campo }}
+                    {{ campo.errors }}
+                </div>
+            {% endfor %}
+
+            <div class="calendar-filter-actions">
+                <button class="button" type="submit">Aplicar filtros</button>
+
+                <a class="button-quiet"
+                   href="{% url 'planificacion_web:inicio' %}{% if periodo %}?periodo={{ periodo.pk }}{% endif %}">
+                    Limpiar
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <p class="muted">
+        Al cambiar de periodo, selecciona «Todos» en los demás filtros
+        para cargar sus opciones.
+    </p>
+</section>
+
+{% if perms.planificacion.add_propuestahorario %}
+    <div class="proposal-actions">
+        <a class="button"
+           href="{% url 'planificacion_web:generar_propuesta' %}">
+            Generar propuesta
+        </a>
+    </div>
+{% endif %}
+
+<section class="stats" aria-label="Resumen del periodo">
+    <article class="stat-card">
+        <span>Bloques de clase</span>
+        <strong>{{ total_bloques }}</strong>
+        <small>En el horario visible</small>
+    </article>
+
+    <article class="stat-card">
+        <span>Docentes</span>
+        <strong>{{ total_docentes }}</strong>
+        <small>Con clases asignadas</small>
+    </article>
+
+    <article class="stat-card">
+        <span>Aulas utilizadas</span>
+        <strong>{{ total_aulas }}</strong>
+        <small>Espacios del horario visible</small>
+    </article>
+</section>
+
+<section class="panel" id="horario">
+    <div class="section-heading">
+        <div>
+            <h2>Horario semanal</h2>
+            <p class="muted">
+                {% if periodo %}
+                    {{ periodo.nombre }}
+                {% else %}
+                    Todavía no hay un periodo visible.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="proposal-actions">
+            <span class="badge">Clases oficiales</span>
+
+            {% if filtros_validos and total_bloques %}
+                <a class="button-quiet"
+                   href="{% url 'planificacion_web:inicio' %}?{{ consulta_impresion }}"
+                   target="_blank"
+                   rel="noopener">
+                    Imprimir / Guardar PDF
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if total_bloques %}
+        {% include "planificacion/calendario.html" %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-symbol">◷</div>
+            <h3>No hay clases para esta selección.</h3>
+            <p>
+                Prueba otros filtros o comprueba si existen horarios
+                oficiales publicados en el periodo.
+            </p>
+        </div>
+    {% endif %}
+</section>
+
+{% if puede_ver_propuestas %}
+    <section class="panel" id="propuestas">
+        <div class="section-heading">
+            <div>
+                <h2>Propuestas recientes</h2>
+                <p class="muted">
+                    Borradores y resultados de planificación.
+                </p>
+            </div>
+
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:historial_propuestas' %}">
+                Ver historial
+            </a>
+        </div>
+
+        <div class="proposal-list">
+            {% for propuesta in propuestas %}
+                <article class="proposal-row">
+                    <div>
+                        <a href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}">
+                            <strong>{{ propuesta.nombre }} ↗</strong>
+                        </a>
+                        <small>
+                            {{ propuesta.autor.username }} ·
+                            {{ propuesta.creada_en|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+
+                    <span class="badge">
+                        {{ propuesta.get_estado_display }}
+                    </span>
+                </article>
+            {% empty %}
+                <p class="muted">
+                    Todavía no hay propuestas para este periodo.
+                </p>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

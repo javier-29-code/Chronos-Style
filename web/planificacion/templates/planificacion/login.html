@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ingresar · Chronos-Style</title>
+
+    <link rel="stylesheet"
+          href="{% static 'planificacion/estilos.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'planificacion/acceso_chronos.css' %}">
+</head>
+<body class="access-page">
+    <main class="access-layout">
+        <section class="access-brand" aria-label="Chronos-Style">
+            <a class="access-logo"
+               href="{% url 'planificacion_web:inicio' %}">
+                <svg width="42" height="42" viewBox="0 0 42 42"
+                     aria-hidden="true">
+                    <circle cx="21" cy="21" r="15.5"
+                            fill="none" stroke="currentColor"
+                            stroke-width="3" stroke-dasharray="58 15"
+                            stroke-linecap="round"/>
+                    <path d="M21 12v10l7 4"
+                          fill="none" stroke="currentColor"
+                          stroke-width="3" stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                    <circle cx="21" cy="21" r="2.5"
+                            fill="currentColor"/>
+                </svg>
+
+                <span>
+                    <strong>Chronos<span>Style</span></strong>
+                    <small>Gestión académica</small>
+                </span>
+            </a>
+
+            <div class="access-copy">
+                <p class="access-eyebrow">PLANIFICA · COORDINA · AVANZA</p>
+                <h1>
+                    El tiempo académico,<br>
+                    <em>mejor organizado.</em>
+                </h1>
+                <p>
+                    Organiza las clases, coordina los espacios
+                    y construye propuestas de horarios para tu institución.
+                </p>
+
+                <div class="access-preview" aria-hidden="true">
+                    <div class="preview-heading">
+                        <span>Planificación semanal</span>
+                        <span class="preview-dot"></span>
+                    </div>
+
+                    <div class="preview-days">
+                        <span>LUN</span>
+                        <span>MAR</span>
+                        <span>MIÉ</span>
+                        <span>JUE</span>
+                        <span>VIE</span>
+                    </div>
+
+                    <div class="preview-blocks">
+                        <span class="preview-blue"></span>
+                        <span></span>
+                        <span class="preview-green"></span>
+                        <span></span>
+                        <span class="preview-purple"></span>
+                        <span></span>
+                        <span class="preview-purple"></span>
+                        <span></span>
+                        <span class="preview-blue"></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="access-footer">
+                Chronos-Style · Planificación académica
+            </p>
+        </section>
+
+        <section class="access-form-side">
+            <div class="access-form-container">
+                <div class="access-mobile-brand">
+                    Chronos<span>Style</span>
+                </div>
+
+                <p class="access-eyebrow">BIENVENIDO DE NUEVO</p>
+                <h2>Inicia sesión</h2>
+                <p class="access-description">
+                    Ingresa con tu cuenta para acceder a tu espacio académico.
+                </p>
+
+                {% if form.errors %}
+                    <div class="access-error" role="alert">
+                        No pudimos iniciar sesión.
+                        Comprueba tu usuario y contraseña.
+                    </div>
+                {% endif %}
+
+                <form method="post" class="access-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <div class="access-field">
+                        <label for="id_username">Nombre de usuario</label>
+                        <input id="id_username"
+                               name="username"
+                               value="{{ form.username.value|default:'' }}"
+                               autocomplete="username"
+                               placeholder="Tu nombre de usuario"
+                               maxlength="150"
+                               required
+                               autofocus>
+                    </div>
+
+                    <div class="access-field">
+                        <label for="id_password">Contraseña</label>
+                        <input id="id_password"
+                               name="password"
+                               type="password"
+                               autocomplete="current-password"
+                               placeholder="Tu contraseña"
+                               required>
+                    </div>
+
+                    <button class="button access-submit" type="submit">
+                        Ingresar a Chronos-Style
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </form>
+
+                <p class="access-help">
+                    Si necesitas una cuenta o recuperar el acceso,
+                    contacta con la administración de tu institución.
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

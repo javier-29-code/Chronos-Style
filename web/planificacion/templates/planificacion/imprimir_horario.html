@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Horario {{ periodo.codigo }} · Chronos-Style</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #f3f4f6;
+            color: #172033;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        main {
+            max-width: 1120px;
+            margin: auto;
+            padding: 32px;
+            background: white;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+        }
+
+        p {
+            margin: 6px 0;
+        }
+
+        .brand {
+            margin-bottom: 8px;
+            color: #475569;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        button,
+        .back-link {
+            padding: 10px 16px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: white;
+            color: #172033;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button {
+            background: #172033;
+            color: white;
+        }
+
+        .metadata {
+            margin: 20px 0;
+            padding: 12px 0;
+            border-top: 1px solid #cbd5e1;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #94a3b8;
+            text-align: left;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        th {
+            background: #e2e8f0;
+        }
+
+        .hours {
+            white-space: nowrap;
+        }
+
+        footer {
+            margin-top: 20px;
+            color: #475569;
+            font-size: 12px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 12mm;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+                color: black;
+                font-size: 10pt;
+            }
+
+            main {
+                max-width: none;
+                padding: 0;
+            }
+
+            .actions {
+                display: none;
+            }
+
+            .table-scroll {
+                overflow: visible;
+            }
+
+            th,
+            td {
+                padding: 7px;
+                color: black;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            h1,
+            .metadata {
+                break-after: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main>
+    <div class="actions">
+        {% if filtros_validos and total_bloques %}
+            <button type="button" onclick="window.print()">
+                Imprimir / Guardar PDF
+            </button>
+        {% endif %}
+
+        <a class="back-link"
+           href="{% url 'planificacion_web:inicio' %}{% if periodo %}?periodo={{ periodo.pk }}{% endif %}">
+            Volver al resumen
+        </a>
+    </div>
+
+    <header>
+        <p class="brand">CHRONOS-STYLE</p>
+        <h1>Horario semanal de clases oficiales</h1>
+
+        {% if periodo %}
+            <p><strong>{{ periodo.nombre }}</strong></p>
+            <p>
+                {{ periodo.codigo }} ·
+                {{ periodo.fecha_inicio|date:"d/m/Y" }}
+                –
+                {{ periodo.fecha_fin|date:"d/m/Y" }}
+            </p>
+        {% endif %}
+    </header>
+
+    {% if filtros_validos %}
+        <section class="metadata" aria-label="Selección del horario">
+            {% for etiqueta, valor in filtros_aplicados %}
+                <p><strong>{{ etiqueta }}:</strong> {{ valor }}</p>
+            {% empty %}
+                <p>Todos los horarios que tienes permiso para consultar en este periodo.</p>
+            {% endfor %}
+
+            <p><strong>Bloques semanales:</strong> {{ total_bloques }}</p>
+        </section>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Horario</th>
+                        <th>Asignatura</th>
+                        <th>Paralelo/Curso</th>
+                        <th>Docente</th>
+                        <th>Aula</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for horario in registros %}
+                        <tr>
+                            <td>{{ horario.get_dia_display }}</td>
+                            <td class="hours">
+                                {{ horario.hora_inicio|time:"H:i" }}
+                                –
+                                {{ horario.hora_fin|time:"H:i" }}
+                            </td>
+                            <td>
+                                {{ horario.asignatura.codigo }} ·
+                                {{ horario.asignatura.nombre }}
+                            </td>
+                            <td>
+                                {{ horario.paralelo.programa.codigo }} ·
+                                {{ horario.paralelo.nombre }}
+                            </td>
+                            <td>
+                                {{ horario.docente.usuario.get_full_name|default:horario.docente.usuario.username }}
+                            </td>
+                            <td>
+                                {{ horario.aula.codigo }} ·
+                                {{ horario.aula.nombre }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                No hay clases oficiales para esta selección.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>
+            La selección de filtros no es válida.
+            Vuelve al resumen y aplica los filtros nuevamente.
+        </p>
+    {% endif %}
+
+    <footer>
+        Consulta generada el {% now "d/m/Y H:i" %}.
+        Las clases corresponden a los filtros y permisos de la cuenta.
+    </footer>
+</main>
+</body>
+</html>

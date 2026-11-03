@@ -1,0 +1,48 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Editar bloque · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">AJUSTAR BORRADOR</p>
+        <h1>Encuentra un mejor espacio.</h1>
+        <p class="muted">
+            {{ bloque.necesidad.asignatura.nombre }} ·
+            {{ bloque.necesidad.paralelo.nombre }} ·
+            Sesión {{ bloque.numero_sesion }}
+        </p>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Cambiar la ubicación de la clase</h2>
+    <p class="muted">
+        Se comprobarán disponibilidad, duración,
+        cruces y carga semanal antes de guardar.
+    </p>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for campo in form %}
+            <div class="form-field">
+                {{ campo.label_tag }}
+                {{ campo }}
+                {{ campo.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="proposal-actions">
+            <button class="button" type="submit">
+                Guardar cambios
+            </button>
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

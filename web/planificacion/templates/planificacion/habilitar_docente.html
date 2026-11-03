@@ -1,0 +1,51 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Habilitar acceso · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">ACCESO DOCENTE</p>
+        <h1>Habilitar acceso</h1>
+        <p class="muted">
+            {{ docente.usuario.get_full_name|default:docente.usuario.username }}
+            · Usuario: {{ docente.usuario.username }}
+        </p>
+    </div>
+</section>
+
+<section class="panel">
+    <p class="muted">
+        Establece la contraseña inicial para que el docente
+        pueda ingresar y consultar sus clases.
+    </p>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for campo in form %}
+            <div class="form-field">
+                {{ campo.label_tag }}
+                {{ campo }}
+
+                {% if campo.help_text %}
+                    <div class="muted">{{ campo.help_text|safe }}</div>
+                {% endif %}
+
+                {{ campo.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="proposal-actions">
+            <button class="button" type="submit">
+                Habilitar acceso
+            </button>
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:lista_docentes' %}">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

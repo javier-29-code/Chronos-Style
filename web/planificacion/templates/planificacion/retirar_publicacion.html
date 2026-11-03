@@ -1,0 +1,48 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Retirar publicación · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">CORREGIR PUBLICACIÓN</p>
+        <h1>Retirar y volver al borrador.</h1>
+        <p class="muted">{{ propuesta.nombre }}</p>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="notice warning">
+        Se retirarán {{ cantidad }} bloques del horario oficial.
+        La propuesta y sus bloques se conservarán para corregirlos.
+        Después deberán pasar nuevamente por revisión y aprobación.
+    </div>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.motivo.label_tag }}
+            {{ form.motivo }}
+            {{ form.motivo.errors }}
+        </div>
+
+        <label class="check-option">
+            {{ form.confirmar }}
+            <span>{{ form.confirmar.label }}</span>
+        </label>
+        {{ form.confirmar.errors }}
+
+        <div class="proposal-actions">
+            <button class="button" type="submit">
+                Retirar publicación
+            </button>
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

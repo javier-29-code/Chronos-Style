@@ -1,0 +1,85 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Inscripciones · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">CONSULTA ESTUDIANTIL</p>
+        <h1>Inscripciones a paralelos</h1>
+        <p class="muted">
+            Define qué horario puede consultar cada estudiante.
+        </p>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Asociar estudiante</h2>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for campo in form %}
+            <div class="form-field">
+                {{ campo.label_tag }}
+                {{ campo }}
+                {{ campo.errors }}
+            </div>
+        {% endfor %}
+
+        <button class="button" type="submit">Guardar inscripción</button>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>Inscripciones registradas</h2>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Paralelo/Curso</th>
+                    <th>Programa</th>
+                    <th>Periodo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in pagina %}
+                    <tr>
+                        <td>{{ registro.estudiante }}</td>
+                        <td>{{ registro.paralelo.nombre }}</td>
+                        <td>{{ registro.paralelo.programa.nombre }}</td>
+                        <td>{{ registro.paralelo.periodo.codigo }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">Todavía no hay inscripciones.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="proposal-actions">
+        {% if pagina.has_previous %}
+            <a class="button-quiet"
+               href="?pagina={{ pagina.previous_page_number }}">
+                Anterior
+            </a>
+        {% endif %}
+
+        <span class="muted">
+            Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+        </span>
+
+        {% if pagina.has_next %}
+            <a class="button-quiet"
+               href="?pagina={{ pagina.next_page_number }}">
+                Siguiente
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

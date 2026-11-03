@@ -1,0 +1,247 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}{{ propuesta.nombre }} · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">PROPUESTA DE HORARIO</p>
+        <h1>{{ propuesta.nombre }}</h1>
+        <p class="muted">
+            {{ propuesta.periodo.codigo }} ·
+            Creada por {{ propuesta.autor.username }}
+        </p>
+    </div>
+    <span class="badge">{{ propuesta.get_estado_display }}</span>
+</section>
+
+<div class="proposal-actions">
+    {% if propuesta.estado == "BORRADOR" %}
+        {% if perms.planificacion.change_propuestahorario %}
+            <form method="post"
+                  action="{% url 'planificacion_web:enviar_revision' propuesta.pk %}">
+                {% csrf_token %}
+                <button class="button" type="submit">
+                    Enviar a revisión
+                </button>
+            </form>
+        {% endif %}
+
+    {% elif propuesta.estado == "EN_REVISION" %}
+        <p class="muted">
+            Revisa las clases y los avisos antes de aprobar.
+            La aprobación publicará todos los bloques.
+        </p>
+
+        {% if perms.planificacion.aprobar_propuestahorario %}
+            <form method="post"
+                  action="{% url 'planificacion_web:aprobar_propuesta' propuesta.pk %}">
+                {% csrf_token %}
+                <button class="button" type="submit">
+                    Aprobar y publicar horario
+                </button>
+            </form>
+            <form method="post"
+                action="{% url 'planificacion_web:devolver_borrador' propuesta.pk %}">
+                {% csrf_token %}
+                <button class="button-quiet" type="submit">
+                    Devolver para corregir
+                </button>
+            </form>
+        {% endif %}
+
+    {% elif propuesta.estado == "APROBADA" %}
+        <p class="muted">
+            Aprobada por {{ propuesta.aprobada_por.username }}
+            el {{ propuesta.aprobada_en|date:"d/m/Y H:i" }}.
+        </p>
+        <a class="button"
+           href="{% url 'planificacion_web:inicio' %}?periodo={{ propuesta.periodo_id }}">
+            Ver horario oficial
+        </a>
+
+        {% if perms.planificacion.aprobar_propuestahorario and perms.planificacion.delete_horario %}
+            <a class="button-quiet"
+                href="{% url 'planificacion_web:retirar_publicacion' propuesta.pk %}">
+                Retirar publicación y corregir
+            </a>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% if error_alcance %}
+    <div class="notice warning">{{ error_alcance }}</div>
+{% endif %}
+
+{% if pendientes %}
+<section class="panel">
+    <h2>Sesiones pendientes</h2>
+    <p class="muted">
+        Este borrador todavía no cubre todas las clases solicitadas.
+    </p>
+    <ul class="detail-list">
+        {% for pendiente in pendientes %}
+            <li>
+                {{ pendiente.descripcion }}:
+                sesiones {{ pendiente.sesiones|join:", " }}.
+            </li>
+        {% endfor %}
+    </ul>
+    {% if propuesta.estado == "BORRADOR" and perms.planificacion.add_bloquepropuesta %}
+        <form method="post"
+              action="{% url 'planificacion_web:reintentar_pendientes' propuesta.pk %}">
+            {% csrf_token %}
+            {{ form_reintento.as_p }}
+
+            <div class="proposal-actions">
+                <button class="button" type="submit">
+                    Reintentar pendientes
+                </button>
+
+                <a class="button-quiet"
+                   href="{% url 'planificacion_web:agregar_sesion' propuesta.pk %}">
+                    Añadir sesión manualmente
+                </a>
+            </div>
+        </form>
+
+        <p class="muted">
+            Se conservarán los bloques existentes.
+            Solo se buscarán espacios para las sesiones faltantes.
+        </p>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if avisos %}
+<section class="panel">
+    <h2>Aspectos para revisar</h2>
+    <ul class="detail-list">
+        {% for aviso in avisos %}
+            <li>{{ aviso }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if pendientes %}
+<section class="panel">
+    <h2>Diagnóstico de generación</h2>
+    <p class="muted">
+        Estos resultados corresponden a la búsqueda original.
+        Las condiciones pueden haber cambiado después.
+        No encontrar una ubicación no demuestra que sea imposible
+        construir otra distribución.
+    </p>
+
+    {% for diagnostico in diagnosticos %}
+        <article>
+            <h3>
+                {{ diagnostico.descripcion }}
+                · Sesión {{ diagnostico.numero_sesion }}
+            </h3>
+            <p class="muted">
+                {{ diagnostico.intentos }} intentos realizados.
+            </p>
+
+            <details>
+                <summary>
+                    Ver motivos de los intentos rechazados
+                </summary>
+
+                <ul class="detail-list">
+                    {% for motivo in diagnostico.motivos %}
+                        <li>
+                            {{ motivo.mensaje }}
+                            {% if motivo.veces %}
+                                <small>
+                                    Detectado en {{ motivo.veces }} intentos.
+                                </small>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </article>
+    {% empty %}
+        <p class="muted">
+            No hay un diagnóstico guardado para estas sesiones.
+            Las propuestas anteriores a esta mejora conservan
+            sus datos originales.
+        </p>
+    {% endfor %}
+</section>
+{% endif %}
+
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <h2>Clases propuestas</h2>
+            <p class="muted">
+                {{ bloques|length }} bloques.
+                Estado: {{ propuesta.get_estado_display }}.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Día y hora</th>
+                    <th>Asignatura</th>
+                    <th>Grupo</th>
+                    <th>Docente</th>
+                    <th>Aula</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bloque in bloques %}
+                <tr>
+                    <td>
+                        <strong>{{ bloque.get_dia_display }}</strong>
+                        <small>
+                            {{ bloque.hora_inicio|time:"H:i" }}–
+                            {{ bloque.hora_fin|time:"H:i" }}
+                        </small>
+                    </td>
+                    <td>
+                        {{ bloque.necesidad.asignatura.nombre }}
+                        <small>Sesión {{ bloque.numero_sesion }}</small>
+                    </td>
+                    <td>{{ bloque.necesidad.paralelo.nombre }}</td>
+                    <td>
+                        {{ bloque.necesidad.docente.usuario.get_full_name|default:bloque.necesidad.docente.usuario.username }}
+                    </td>
+                    <td>{{ bloque.aula.codigo }}</td>
+                    
+                    <td>
+                        {% if propuesta.estado == "BORRADOR" and perms.planificacion.change_bloquepropuesta %}
+                            <a class="button-quiet"
+                                href="{% url 'planificacion_web:editar_bloque' propuesta.pk bloque.pk %}">
+                                 Editar
+                            </a>
+                            {% else %}
+                                <span class="muted">Solo lectura</span>
+                            {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        No se ubicaron clases. Revisa las franjas,
+                        disponibilidades y aulas activas.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<a class="button-quiet"
+   href="{% url 'planificacion_web:inicio' %}">
+    Volver al resumen
+</a>
+{% endblock %}

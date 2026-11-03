@@ -1,0 +1,49 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Añadir sesión · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">COMPLETAR BORRADOR</p>
+        <h1>Un espacio para la clase pendiente.</h1>
+        <p class="muted">{{ propuesta.nombre }}</p>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Añadir sesión</h2>
+    <p class="muted">
+        Se comprobarán duración, disponibilidad,
+        cruces y carga semanal antes de guardar.
+    </p>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for campo in form %}
+            <div class="form-field">
+                {{ campo.label_tag }}
+                {{ campo }}
+
+                {% if campo.help_text %}
+                    <small class="muted">{{ campo.help_text }}</small>
+                {% endif %}
+
+                {{ campo.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="proposal-actions">
+            <button class="button" type="submit">
+                Guardar sesión
+            </button>
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

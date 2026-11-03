@@ -1,0 +1,41 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}{{ titulo }} · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">PARALELO/CURSO</p>
+        <h1>{{ titulo }}</h1>
+        <p class="muted">{{ paralelo }}</p>
+    </div>
+
+    <a class="button-quiet"
+       href="{% url 'planificacion_web:detalle_paralelo' paralelo.pk %}">
+        Volver al paralelo
+    </a>
+</section>
+
+<section class="panel">
+    <p class="muted">
+        Define un intervalo en el que este paralelo puede recibir clases.
+        Puedes registrar varios intervalos por día.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="proposal-actions">
+            <button type="submit" class="button">
+                Guardar franja
+            </button>
+
+            <a class="button-quiet"
+               href="{% url 'planificacion_web:detalle_paralelo' paralelo.pk %}">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

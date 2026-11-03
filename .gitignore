@@ -224,3 +224,11 @@ __marimo__/
 /datos/*.db-journal
 /datos/*.db-wal
 /datos/*.db-shm
+
+.venv/
+__pycache__/
+*.py[cod]
+/web/db.sqlite3
+/web/db.sqlite3-journal
+/web/db.sqlite3-wal
+/web/db.sqlite3-shm

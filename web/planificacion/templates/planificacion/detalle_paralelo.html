@@ -1,0 +1,227 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}{{ paralelo.nombre }} · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">PARALELO/CURSO</p>
+        <h1>{{ paralelo.nombre }}</h1>
+        <p class="muted">
+            {{ paralelo.programa.nombre }} ·
+            {{ paralelo.periodo.codigo }}
+        </p>
+        <p class="muted">
+            {{ paralelo.periodo.fecha_inicio|date:"d/m/Y" }}
+            –
+            {{ paralelo.periodo.fecha_fin|date:"d/m/Y" }}
+        </p>
+    </div>
+
+    <a class="button-quiet"
+       href="{% url 'planificacion_web:lista_paralelos' %}">
+        Volver a paralelos
+    </a>
+</section>
+
+<section class="panel">
+    <h2>Franjas de clases</h2>
+
+    {% if tiene_franjas_propias %}
+        <p class="muted">
+            Este paralelo puede recibir clases dentro de las franjas
+            activas indicadas, respetando también las franjas del periodo
+            y la disponibilidad docente.
+        </p>
+    {% else %}
+        <p class="muted">
+            No hay franjas propias activas.
+            Se utilizan las franjas generales del periodo.
+        </p>
+    {% endif %}
+
+    {% if perms.academico.change_paralelo %}
+        <div class="proposal-actions">
+            <a class="button"
+               href="{% url 'planificacion_web:nueva_franja_paralelo' paralelo.pk %}">
+                Agregar franja
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Horario</th>
+                    <th>Estado</th>
+                    {% if perms.academico.change_paralelo %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for franja in franjas_paralelo %}
+                    <tr>
+                        <td>{{ franja.get_dia_display }}</td>
+                        <td>
+                            {{ franja.hora_inicio|time:"H:i" }}
+                            –
+                            {{ franja.hora_fin|time:"H:i" }}
+                        </td>
+                        <td>
+                            {{ franja.activo|yesno:"Activa,Inactiva" }}
+                        </td>
+
+                        {% if perms.academico.change_paralelo %}
+                            <td>
+                                <div class="proposal-actions">
+                                    <a class="button-quiet"
+                                       href="{% url 'planificacion_web:editar_franja_paralelo' paralelo.pk franja.pk %}">
+                                        Editar
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url 'planificacion_web:estado_franja_paralelo' paralelo.pk franja.pk %}">
+                                        {% csrf_token %}
+
+                                        {% if franja.activo %}
+                                            <input type="hidden"
+                                                   name="estado"
+                                                   value="inactivo">
+                                            <button type="submit"
+                                                    class="button-quiet">
+                                                Desactivar
+                                            </button>
+                                        {% else %}
+                                            <input type="hidden"
+                                                   name="estado"
+                                                   value="activo">
+                                            <button type="submit"
+                                                    class="button-quiet">
+                                                Activar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="{% if perms.academico.change_paralelo %}4{% else %}3{% endif %}">
+                            Todavía no hay franjas propias registradas.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Asignaturas programadas</h2>
+    <p class="muted">
+        Asignaturas que tienen clases oficiales en este paralelo.
+    </p>
+
+    {% for asignatura in asignaturas %}
+        <article class="proposal-row">
+            <strong>{{ asignatura.nombre }}</strong>
+            <span class="muted">{{ asignatura.codigo }}</span>
+        </article>
+    {% empty %}
+        <p class="muted">
+            Todavía no hay asignaturas con horarios oficiales.
+        </p>
+    {% endfor %}
+</section>
+
+<section class="panel">
+    <h2>Horario oficial</h2>
+    <p class="muted">{{ total_bloques }} bloques semanales</p>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Horario</th>
+                    <th>Asignatura</th>
+                    <th>Docente</th>
+                    <th>Aula</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for horario in horarios %}
+                    <tr>
+                        <td>{{ horario.get_dia_display }}</td>
+                        <td>
+                            {{ horario.hora_inicio|time:"H:i" }}
+                            –
+                            {{ horario.hora_fin|time:"H:i" }}
+                        </td>
+                        <td>{{ horario.asignatura.nombre }}</td>
+                        <td>
+                            {{ horario.docente.usuario.get_full_name|default:horario.docente.usuario.username }}
+                        </td>
+                        <td>{{ horario.aula.codigo }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            Este paralelo todavía no tiene clases oficiales.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if puede_ver_inscritos %}
+    <section class="panel">
+        <h2>Estudiantes asociados</h2>
+        <p class="muted">
+            {{ pagina_estudiantes.paginator.count }} estudiantes
+        </p>
+
+        {% for inscripcion in pagina_estudiantes %}
+            <article class="proposal-row">
+                <strong>
+                    {{ inscripcion.estudiante.usuario.get_full_name|default:inscripcion.estudiante.usuario.username }}
+                </strong>
+                <span class="muted">
+                    {{ inscripcion.estudiante.usuario.username }}
+                </span>
+            </article>
+        {% empty %}
+            <p class="muted">
+                Todavía no hay estudiantes asociados a este paralelo.
+            </p>
+        {% endfor %}
+
+        <div class="proposal-actions">
+            {% if pagina_estudiantes.has_previous %}
+                <a class="button-quiet"
+                   href="?pagina={{ pagina_estudiantes.previous_page_number }}">
+                    Anterior
+                </a>
+            {% endif %}
+
+            <span class="muted">
+                Página {{ pagina_estudiantes.number }}
+                de {{ pagina_estudiantes.paginator.num_pages }}
+            </span>
+
+            {% if pagina_estudiantes.has_next %}
+                <a class="button-quiet"
+                   href="?pagina={{ pagina_estudiantes.next_page_number }}">
+                    Siguiente
+                </a>
+            {% endif %}
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

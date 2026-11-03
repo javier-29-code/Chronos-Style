@@ -1,0 +1,81 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Generar propuesta · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">PLANIFICACIÓN ASISTIDA</p>
+        <h1>Construye una propuesta.</h1>
+        <p class="muted">
+            Selecciona las clases. El sistema buscará espacios
+            y preparará un borrador para revisión.
+        </p>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>1. Elige el periodo</h2>
+
+    <form method="get" class="period-controls">
+        <label class="sr-only" for="periodo">Periodo académico</label>
+        <select name="periodo" id="periodo">
+            {% for opcion in periodos %}
+                <option value="{{ opcion.pk }}"
+                    {% if opcion.pk == periodo.pk %}selected{% endif %}>
+                    {{ opcion.codigo }} · {{ opcion.nombre }}
+                </option>
+            {% empty %}
+                <option value="">Sin periodos registrados</option>
+            {% endfor %}
+        </select>
+        <button class="button-quiet" type="submit">Cargar</button>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>2. Selecciona las clases</h2>
+
+    <form method="post" class="planning-form">
+        {% csrf_token %}
+        {{ form.periodo }}
+        {{ form.non_field_errors }}
+        {{ form.periodo.errors }}
+
+        <div class="form-field">
+            {{ form.nombre.label_tag }}
+            {{ form.nombre }}
+            {{ form.nombre.errors }}
+        </div>
+
+        <div class="check-list">
+            {% for opcion in form.necesidades %}
+                <label class="check-option">
+                    {{ opcion.tag }}
+                    <span>{{ opcion.choice_label }}</span>
+                </label>
+            {% empty %}
+                <p class="muted">
+                    No hay necesidades disponibles en este periodo.
+                    Regístralas en Administración → Necesidades de clases.
+                </p>
+            {% endfor %}
+        </div>
+        {{ form.necesidades.errors }}
+
+        <div class="form-field">
+            {{ form.paso_minutos.label_tag }}
+            {{ form.paso_minutos }}
+            <small class="muted">{{ form.paso_minutos.help_text }}</small>
+            {{ form.paso_minutos.errors }}
+        </div>
+
+        <p class="muted">
+            Los laboratorios recomendados se priorizan.
+            Si no están disponibles, se podrán utilizar aulas comunes.
+        </p>
+
+        <button class="button" type="submit">Generar borrador</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Propuestas · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">HISTORIAL DE PLANIFICACIÓN</p>
+        <h1>Todas tus propuestas.</h1>
+        <p class="muted">
+            Busca borradores, propuestas en revisión y publicaciones anteriores.
+        </p>
+    </div>
+
+    {% if perms.planificacion.add_propuestahorario %}
+        <a class="button"
+           href="{% url 'planificacion_web:generar_propuesta' %}">
+            Generar propuesta
+        </a>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <form method="get" class="proposal-actions">
+        <div class="form-field">
+            <label for="busqueda">Nombre o código del periodo</label>
+            <input id="busqueda" name="q"
+                   value="{{ busqueda }}" placeholder="Buscar propuesta">
+        </div>
+
+        <div class="form-field">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado">
+                <option value="">Todos</option>
+                {% for valor, etiqueta in estados %}
+                    <option value="{{ valor }}"
+                        {% if estado == valor %}selected{% endif %}>
+                        {{ etiqueta }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button class="button" type="submit">Buscar</button>
+    </form>
+
+    <p class="muted">{{ pagina.paginator.count }} resultados</p>
+
+    {% for propuesta in pagina %}
+        <article class="proposal-row">
+            <div>
+                <a href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}">
+                    <strong>{{ propuesta.nombre }} ↗</strong>
+                </a>
+                <small>
+                    {{ propuesta.periodo.codigo }} ·
+                    {{ propuesta.autor.username }} ·
+                    {{ propuesta.creada_en|date:"d/m/Y H:i" }}
+                </small>
+            </div>
+            <span class="badge">{{ propuesta.get_estado_display }}</span>
+        </article>
+    {% empty %}
+        <div class="empty-state">
+            <h3>No encontramos propuestas.</h3>
+            <p>Prueba otra búsqueda o selecciona todos los estados.</p>
+        </div>
+    {% endfor %}
+</section>
+
+<div class="proposal-actions">
+    {% if pagina.has_previous %}
+        <a class="button-quiet"
+           href="?{{ filtros }}&amp;pagina={{ pagina.previous_page_number }}">
+            Anterior
+        </a>
+    {% endif %}
+
+    <span class="muted">
+        Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+    </span>
+
+    {% if pagina.has_next %}
+        <a class="button-quiet"
+           href="?{{ filtros }}&amp;pagina={{ pagina.next_page_number }}">
+            Siguiente
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

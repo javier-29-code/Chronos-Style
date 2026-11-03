@@ -1,0 +1,97 @@
+<div class="calendar-scroll"
+     role="region"
+     aria-label="Calendario semanal"
+     tabindex="0">
+
+    <div class="calendar-layout">
+        <div class="calendar-corner">HORA</div>
+
+        {% for dia in calendario.dias %}
+            <div class="calendar-day-heading">{{ dia.nombre }}</div>
+        {% endfor %}
+
+        <div class="calendar-axis"
+             style="height: {{ calendario.altura }}px;">
+            {% for marca in calendario.marcas %}
+                <span style="top: {{ marca.arriba }}px;">
+                    {{ marca.texto }}
+                </span>
+            {% endfor %}
+        </div>
+
+        {% for dia in calendario.dias %}
+            <div class="calendar-day"
+                 style="height: {{ calendario.altura }}px;">
+
+                {% for marca in calendario.marcas %}
+                    <div class="calendar-hour-line"
+                         style="top: {{ marca.arriba }}px;"></div>
+                {% endfor %}
+
+                {% for bloque in dia.bloques %}
+                    <button
+                        type="button"
+                        class="calendar-event event-color-{{ bloque.color }}"
+                        style="
+                            top: {{ bloque.arriba }}px;
+                            height: {{ bloque.alto }}px;
+                            left: {{ bloque.izquierda }}%;
+                            width: {{ bloque.ancho }}%;
+                        "
+                        aria-haspopup="dialog"
+                        aria-controls="calendar-detail"
+                        aria-label="{{ bloque.horario.asignatura.nombre }}, {{ dia.nombre }}, {{ bloque.horario.hora_inicio|time:'H:i' }} a {{ bloque.horario.hora_fin|time:'H:i' }}, {{ bloque.horario.paralelo.nombre }}"
+                        data-calendar-event
+                        data-asignatura="{{ bloque.horario.asignatura.nombre }}"
+                        data-docente="{{ bloque.horario.docente.usuario.get_full_name|default:bloque.horario.docente.usuario.username }}"
+                        data-paralelo="{{ bloque.horario.paralelo.nombre }}"
+                        data-aula="{{ bloque.horario.aula.codigo }}"
+                        data-dia="{{ dia.nombre }}"
+                        data-horas="{{ bloque.horario.hora_inicio|time:'H:i' }}–{{ bloque.horario.hora_fin|time:'H:i' }}">
+
+                        <span class="event-time">
+                            {{ bloque.horario.hora_inicio|time:"H:i" }}–
+                            {{ bloque.horario.hora_fin|time:"H:i" }}
+                        </span>
+                        <strong>{{ bloque.horario.asignatura.nombre }}</strong>
+                        <span>
+                            {{ bloque.horario.docente.usuario.get_full_name|default:bloque.horario.docente.usuario.username }}
+                        </span>
+                        <span>{{ bloque.horario.aula.codigo }}</span>
+                        <span class="event-group">
+                            {{ bloque.horario.paralelo.nombre }}
+                        </span>
+                    </button>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<dialog id="calendar-detail"
+        class="calendar-dialog"
+        aria-labelledby="calendar-detail-title">
+    <form method="dialog" class="dialog-heading">
+        <span class="eyebrow">CLASE OFICIAL</span>
+        <button class="button-quiet" aria-label="Cerrar detalle">×</button>
+    </form>
+
+    <h2 id="calendar-detail-title" data-detalle="asignatura"></h2>
+
+    <dl class="calendar-details">
+        <dt>Día</dt>
+        <dd data-detalle="dia"></dd>
+
+        <dt>Horario</dt>
+        <dd data-detalle="horas"></dd>
+
+        <dt>Docente</dt>
+        <dd data-detalle="docente"></dd>
+
+        <dt>Paralelo/Curso</dt>
+        <dd data-detalle="paralelo"></dd>
+
+        <dt>Aula</dt>
+        <dd data-detalle="aula"></dd>
+    </dl>
+</dialog>

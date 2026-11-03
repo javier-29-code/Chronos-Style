@@ -1,0 +1,86 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Periodos académicos · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">ORGANIZACIÓN ACADÉMICA</p>
+        <h1>Periodos académicos</h1>
+        <p class="muted">
+            Consulta los ciclos de planificación y sus fechas.
+        </p>
+    </div>
+
+    {% if perms.academico.add_periodoacademico %}
+        <a class="button"
+           href="{% url 'planificacion_web:nuevo_periodo' %}">
+            Agregar periodo
+        </a>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <form method="get" class="proposal-actions">
+        <div class="form-field">
+            <label for="busqueda">Código o nombre</label>
+            <input id="busqueda"
+                   name="q"
+                   value="{{ busqueda }}"
+                   placeholder="Buscar periodo">
+        </div>
+        <button class="button-quiet" type="submit">Buscar</button>
+    </form>
+
+    <p class="muted">{{ pagina.paginator.count }} periodos</p>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Inicio</th>
+                    <th>Fin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for periodo in pagina %}
+                    <tr>
+                        <td><strong>{{ periodo.codigo }}</strong></td>
+                        <td>{{ periodo.nombre }}</td>
+                        <td>{{ periodo.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td>{{ periodo.fecha_fin|date:"d/m/Y" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            No hay periodos que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="proposal-actions">
+    {% if pagina.has_previous %}
+        <a class="button-quiet"
+           href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">
+            Anterior
+        </a>
+    {% endif %}
+
+    <span class="muted">
+        Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+    </span>
+
+    {% if pagina.has_next %}
+        <a class="button-quiet"
+           href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.next_page_number }}">
+            Siguiente
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

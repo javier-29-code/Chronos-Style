@@ -1,0 +1,100 @@
+{% extends "planificacion/base.html" %}
+
+{% block titulo %}Paralelos/Cursos · Chronos-Style{% endblock %}
+
+{% block contenido %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">ORGANIZACIÓN ACADÉMICA</p>
+        <h1>Paralelos/Cursos</h1>
+        <p class="muted">
+            Consulta los conjuntos de estudiantes
+            para los que se planifican las clases.
+        </p>
+    </div>
+
+    {% if perms.academico.add_paralelo %}
+        <a class="button"
+           href="{% url 'planificacion_web:nuevo_paralelo' %}">
+            Agregar paralelo
+        </a>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <form method="get" class="proposal-actions">
+        <div class="form-field">
+            <label for="busqueda">Nombre, programa o periodo</label>
+            <input id="busqueda"
+                   name="q"
+                   value="{{ busqueda }}"
+                   placeholder="Buscar paralelo">
+        </div>
+        <button class="button-quiet" type="submit">Buscar</button>
+    </form>
+
+    <p class="muted">{{ pagina.paginator.count }} paralelos/cursos</p>
+
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Paralelo/Curso</th>
+                    <th>Programa</th>
+                    <th>Periodo</th>
+                    <th>Inscritos</th>
+                    <th>Bloques oficiales</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for paralelo in pagina %}
+                    <tr>
+                        <td>
+                            {% if perms.planificacion.view_horario %}
+                                <a href="{% url 'planificacion_web:detalle_paralelo' paralelo.pk %}">
+                                    <strong>{{ paralelo.nombre }}</strong>
+                                </a>
+                            {% else %}
+                                <strong>{{ paralelo.nombre }}</strong>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ paralelo.programa.nombre }}
+                            <small>{{ paralelo.programa.codigo }}</small>
+                        </td>
+                        <td>{{ paralelo.periodo.codigo }}</td>
+                        <td>{{ paralelo.total_inscritos }}</td>
+                        <td>{{ paralelo.total_bloques }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            No hay paralelos que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="proposal-actions">
+    {% if pagina.has_previous %}
+        <a class="button-quiet"
+           href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">
+            Anterior
+        </a>
+    {% endif %}
+
+    <span class="muted">
+        Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}
+    </span>
+
+    {% if pagina.has_next %}
+        <a class="button-quiet"
+           href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.next_page_number }}">
+            Siguiente
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

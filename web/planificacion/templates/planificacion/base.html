@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Chronos-Style{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{% static 'planificacion/estilos.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'planificacion/tema_chronos.css' %}">
+
+    <script src="{% static 'planificacion/interfaz.js' %}" defer></script>
+
+    <link rel="stylesheet"
+        href="{% static 'planificacion/calendario.css' %}">
+    
+    <script src="{% static 'planificacion/calendario.js' %}" defer></script>
+</head>
+<body>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg"
+     aria-hidden="true">
+    <defs>
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="2"/>
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="16" rx="3"/>
+            <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/>
+        </symbol>
+        <symbol id="icon-building" viewBox="0 0 24 24">
+            <path d="M4 21V6l8-3 8 3v15M2 21h20M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01M9 21v-4h6v4"/>
+        </symbol>
+        <symbol id="icon-users" viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </symbol>
+        <symbol id="icon-book" viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13ZM8 7h8M8 11h6"/>
+        </symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+        </symbol>
+        <symbol id="icon-shield" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+            <path d="m9 12 2 2 4-4"/>
+        </symbol>
+    </defs>
+</svg>
+
+{% with ruta_actual=request.resolver_match.url_name %}
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-heading">
+            <a class="brand" href="{% url 'planificacion_web:inicio' %}">
+                <span class="brand-symbol">
+                    <svg width="42" height="42" viewBox="0 0 42 42"
+                         aria-hidden="true">
+                        <circle cx="21" cy="21" r="15.5"
+                                fill="none" stroke="currentColor"
+                                stroke-width="3" stroke-dasharray="58 15"
+                                stroke-linecap="round"/>
+                        <path d="M21 12v10l7 4"
+                              fill="none" stroke="currentColor"
+                              stroke-width="3" stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                        <circle cx="21" cy="21" r="2.5"
+                                fill="currentColor"/>
+                    </svg>
+                </span>
+                <span>
+                    <span class="brand-name">
+                        Chronos<span>Style</span>
+                    </span>
+                    <small class="brand-caption">Gestión académica</small>
+                </span>
+            </a>
+
+            <button class="sidebar-close" type="button"
+                    data-menu-close aria-label="Cerrar menú">
+                ×
+            </button>
+        </div>
+
+        <nav aria-label="Navegación principal">
+            <p class="nav-label">MENÚ PRINCIPAL</p>
+
+            <a class="nav-link {% if ruta_actual == 'inicio' %}selected{% endif %}"
+               href="{% url 'planificacion_web:inicio' %}">
+                <svg class="nav-icon" aria-hidden="true">
+                    <use href="#icon-grid"/>
+                </svg>
+                Resumen
+            </a>
+
+            <details class="nav-group"
+                     {% if ruta_actual == 'generar_propuesta' or ruta_actual == 'historial_propuestas' or ruta_actual == 'detalle_propuesta' or ruta_actual == 'editar_bloque' or ruta_actual == 'agregar_sesion' or ruta_actual == 'retirar_publicacion' %}open{% endif %}>
+                <summary class="nav-link">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-calendar"/>
+                    </svg>
+                    <span>Gestión de horarios</span>
+                    <span class="nav-group-arrow" aria-hidden="true">›</span>
+                </summary>
+
+                <div class="nav-submenu">
+                    {% if perms.planificacion.add_propuestahorario %}
+                        <a class="nav-link {% if ruta_actual == 'generar_propuesta' %}selected{% endif %}"
+                           href="{% url 'planificacion_web:generar_propuesta' %}"
+                           {% if ruta_actual == 'generar_propuesta' %}aria-current="page"{% endif %}>
+                            Generar propuesta
+                        </a>
+                    {% endif %}
+
+                    <a class="nav-link {% if ruta_actual == 'historial_propuestas' or ruta_actual == 'detalle_propuesta' or ruta_actual == 'editar_bloque' or ruta_actual == 'agregar_sesion' or ruta_actual == 'retirar_publicacion' %}selected{% endif %}"
+                       href="{% url 'planificacion_web:historial_propuestas' %}"
+                       {% if ruta_actual == 'historial_propuestas' %}aria-current="page"{% endif %}>
+                        Historial de propuestas
+                    </a>
+                </div>
+            </details>
+
+            {% if perms.academico.view_aula %}
+                <a class="nav-link {% if ruta_actual == 'lista_aulas' or ruta_actual == 'nueva_aula' or ruta_actual == 'editar_aula' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_aulas' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-building"/>
+                    </svg>
+                    Aulas
+                </a>
+            {% endif %}
+
+            {% if perms.usuarios.view_perfildocente %}
+                <a class="nav-link {% if ruta_actual == 'lista_docentes' or ruta_actual == 'nuevo_docente' or ruta_actual == 'editar_docente' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_docentes' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-users"/>
+                    </svg>
+                    Docentes
+                </a>
+            {% endif %}
+
+            {% if perms.academico.view_asignatura %}
+                <a class="nav-link {% if ruta_actual == 'lista_asignaturas' or ruta_actual == 'nueva_asignatura' or ruta_actual == 'editar_asignatura' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_asignaturas' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-book"/>
+                    </svg>
+                    Asignaturas
+                </a>
+            {% endif %}
+
+            {% if perms.academico.view_periodoacademico %}
+                <a class="nav-link {% if ruta_actual == 'lista_periodos' or ruta_actual == 'nuevo_periodo' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_periodos' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-calendar"/>
+                    </svg>
+                    Periodos academicos
+                </a>
+            {% endif %}
+
+            {% if perms.academico.view_paralelo %}
+                <a class="nav-link {% if ruta_actual == 'lista_paralelos' or ruta_actual == 'nuevo_paralelo' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_paralelos' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-users"/>
+                    </svg>
+                    Paralelos/Cursos
+                </a>
+            {% endif %}
+
+            {% if perms.academico.view_inscripcion and perms.academico.add_inscripcion %}
+                <a class="nav-link {% if ruta_actual == 'inscripciones' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:inscripciones' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-users"/>
+                    </svg>
+                    Inscripciones
+                </a>
+            {% endif %}
+
+            <p class="nav-label">PREPARAR HORARIOS</p>
+
+            {% if perms.planificacion.view_necesidadclase and perms.planificacion.add_necesidadclase %}
+                <a class="nav-link {% if ruta_actual == 'necesidades' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:necesidades' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-book"/>
+                    </svg>
+                    Necesidades de clases
+                </a>
+            {% endif %}
+
+            {% if perms.planificacion.view_disponibilidaddocente and perms.planificacion.add_disponibilidaddocente %}
+                <a class="nav-link {% if ruta_actual == 'disponibilidades' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:disponibilidades' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-users"/>
+                    </svg>
+                    Disponibilidades
+                </a>
+            {% endif %}
+
+            {% if perms.planificacion.view_franjaplanificacion and perms.planificacion.add_franjaplanificacion %}
+                <a class="nav-link {% if ruta_actual == 'franjas' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:franjas' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-clock"/>
+                    </svg>
+                    Franjas de planificación
+                </a>
+            {% endif %}
+
+            {% if user.is_staff %}
+                <p class="nav-label">CONFIGURACIÓN</p>
+                <a class="nav-link" href="{% url 'admin:index' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-shield"/>
+                    </svg>
+                    Administración
+                </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-bottom">
+            <span class="avatar">{{ user.username|first|upper }}</span>
+            <div>
+                <strong>
+                    {{ user.get_full_name|default:user.username }}
+                </strong>
+                <small>Sesión iniciada</small>
+            </div>
+        </div>
+    </aside>
+
+    <button class="sidebar-overlay" type="button"
+            data-menu-close hidden
+            aria-label="Cerrar menú lateral"></button>
+
+    <main class="main" id="contenido-principal">
+        <header class="topbar">
+            <div class="topbar-leading">
+                <button id="menu-open" class="menu-button" type="button"
+                        aria-controls="sidebar" aria-expanded="false"
+                        aria-label="Abrir menú">
+                    <svg class="nav-icon" aria-hidden="true"
+                         viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <div class="breadcrumb">
+                    Chronos-Style <span>/</span>
+                    <strong>Espacio académico</strong>
+                </div>
+            </div>
+
+            <div class="topbar-account">
+                <span class="avatar">{{ user.username|first|upper }}</span>
+                <span class="account-name">
+                    {{ user.get_full_name|default:user.username }}
+                </span>
+
+                <form method="post"
+                      action="{% url 'planificacion_web:logout' %}">
+                    {% csrf_token %}
+                    <button class="button-quiet" type="submit">
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content">
+            {% for message in messages %}
+                <div class="notice {{ message.tags }}" role="status">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+            {% block contenido %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endwith %}
+</body>
+</html>
