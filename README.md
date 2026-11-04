@@ -1,122 +1,279 @@
 # Chronos-Style
 
-Sistema de gestión de horarios académicos universitarios, desarrollado en Python con Programación Orientada a Objetos para la asignatura de POO (ULEAM).
+Sistema web de gestión de horarios de clases desarrollado con Python y
+Django. Permite preparar los datos de planificación, generar propuestas,
+corregirlas, revisarlas y publicar horarios oficiales.
 
-Gestiona usuarios (estudiantes, docentes y administradores académicos), asignaturas, planes de estudio, programas académicos, períodos académicos, aulas y laboratorios, y franjas horarias.
+Proyecto iniciado en la asignatura de Programación Orientada a Objetos
+de la Universidad Laica Eloy Alfaro de Manabí (ULEAM) y posteriormente
+migrado de una aplicación de escritorio con Tkinter a una aplicación web.
 
-## Requisitos
+## Funcionalidades
 
-- Python 3 (probado con Python 3.14)
-- No necesita instalar librerías externas (la interfaz usa tkinter, que viene incluido con Python)
+- Catálogos de programas, periodos, paralelos/cursos, asignaturas y aulas.
+- Registro de docentes y configuración de su carga semanal máxima.
+- Disponibilidad docente y franjas generales por periodo.
+- Franjas por Paralelo/Curso para horarios de mañana, tarde o mixtos.
+- Definición de sesiones semanales y duración de cada clase.
+- Generación automática de propuestas en borrador.
+- Detección de conflictos de docente, aula y paralelo.
+- Diagnóstico de sesiones que no pudieron ubicarse.
+- Edición de bloques y asignación manual de sesiones pendientes.
+- Reintento de pendientes conservando los bloques existentes.
+- Revisión, aprobación y publicación de horarios.
+- Retirada de publicación con registro del motivo.
+- Consulta de horarios oficiales mediante un calendario semanal.
+- Filtros por periodo, docente, aula y Paralelo/Curso.
+- Vista de impresión y guardado como PDF desde el navegador.
+- Comando para cargar datos ficticios de demostración.
 
-## Cómo ejecutar
+La preferencia por laboratorio es flexible: el generador puede asignar
+un aula común cuando no encuentra un laboratorio disponible.
 
-Desde la carpeta raíz del proyecto.
+## Tecnologías
 
-**Aplicación con interfaz gráfica** (login y ventana principal):
+- Python 3.14.2: versión utilizada en las comprobaciones locales.
+- Django 5.2.18.
+- SQLite para desarrollo local.
+- HTML, CSS y JavaScript.
+- Pruebas automatizadas con el sistema de pruebas de Django.
+
+Las dependencias están fijadas en `web/requirements.txt`.
+
+## Instalación local en Windows
+
+Ejecuta los comandos en PowerShell.
+
+### 1. Descargar el proyecto
+
+La versión Django se encuentra actualmente en la rama
+`feature/migracion-django`.
 
 ```powershell
-cd src
-python -m interfaces.aplicacion
+git clone --branch feature/migracion-django https://github.com/javier-29-code/Chronos-Style.git
+cd Chronos-Style
 ```
 
-**Programa de demostración** (consola):
+Si ya tienes el repositorio, utiliza tu copia existente y comprueba
+que estás en la rama correspondiente.
+
+### 2. Crear el entorno virtual
 
 ```powershell
-python src\main.py
+py -3.14 -m venv .venv
 ```
 
-`main.py` crea objetos de ejemplo de cada clase y muestra su información en pantalla.
-
-## Cómo ejecutar las pruebas
-
-Todas las pruebas:
+### 3. Instalar las dependencias
 
 ```powershell
-python -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m pip install -r .\web\requirements.txt
 ```
 
-O por módulo:
+Los comandos utilizan directamente el Python del entorno virtual,
+por lo que no es obligatorio activarlo.
+
+### 4. Preparar la base de datos
 
 ```powershell
-python -m unittest tests.test_usuario -v
-python -m unittest tests.test_gestor_usuario -v
+cd web
+..\.venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py configurar_roles
 ```
 
-## Estructura del proyecto
+La base local se crea en `web/db.sqlite3`.
 
+Las migraciones se incluyen en Git. Para instalar el proyecto se ejecuta
+`migrate`; no es necesario generar nuevas migraciones.
+
+### 5. Elegir cómo comenzar
+
+Para explorar el sistema con datos ficticios:
+
+```powershell
+..\.venv\Scripts\python.exe manage.py cargar_demo
 ```
-Chronos-Style/
-├── src/
-│   ├── main.py            # Programa de demostración
-│   ├── modelos/           # Clases del dominio
-│   ├── servicios/         # Lógica de negocio (GestorUsuarios)
-│   └── interfaces/        # Interfaz gráfica (tkinter)
-└── tests/                 # Pruebas unitarias
+
+Para administrar cuentas desde el panel de Django, puedes crear
+un superusuario:
+
+```powershell
+..\.venv\Scripts\python.exe manage.py createsuperuser
 ```
 
-### Clases en `src/modelos/`
+El superusuario es independiente de las cuentas de demostración.
 
-| Grupo | Clases |
-|-------|--------|
-| Usuarios | `Usuario` (abstracta), `Estudiante`, `Docente`, `AdministradorAcademico` |
-| Académico | `Asignatura`, `PlanEstudios`, `ProgramaAcademico`, `PeriodoAcademico` |
-| Espacios | `Aula`, `AulaTeorica`, `LaboratorioComputo`, `LaboratorioElectronica`, `LaboratorioRedes` |
-| Tiempo | `FranjaHoraria` |
+### 6. Iniciar el servidor local
 
-## Usuarios
+```powershell
+..\.venv\Scripts\python.exe manage.py runserver
+```
 
-`Usuario` es una clase abstracta que guarda los datos comunes (nombre, correo, contraseña), valida los datos y maneja el inicio y cierre de sesión. Cada tipo de usuario define su propio dominio de correo y sus métodos `mostrar_perfil()` y `ver_horario()`:
+- Aplicación: http://127.0.0.1:8000/
+- Administración Django: http://127.0.0.1:8000/admin/
 
-| Clase | Dominio de correo |
-|-------|-------------------|
-| `Estudiante` | `@live.uleam.edu.ec` |
-| `Docente` | `@uleam.edu.ec` |
-| `AdministradorAcademico` | `@uleam.edu.ec` |
+`runserver` se utiliza para desarrollo local.
 
-La contraseña debe tener al menos 8 caracteres e incluir letras y números.
+## Demostración
 
-`GestorUsuarios` (en `src/servicios/`) guarda los usuarios registrados por correo y valida el inicio de sesión. Ante un correo o una contraseña incorrectos devuelve el mismo mensaje de error, a propósito.
+El comando `cargar_demo` crea un programa y un periodo identificados
+como demostración, además de docentes, estudiantes, aulas, asignaturas,
+disponibilidades y necesidades de clases.
 
-## Interfaz gráfica
-
-La aplicación usa **tkinter (ttk)**. El código está organizado por capas:
-
-| Carpeta | Responsabilidad |
+| Paralelo | Franjas propias |
 |---|---|
-| `src/modelos/` | Clases del dominio. |
-| `src/servicios/` | Lógica de la aplicación (`GestorUsuarios`). |
-| `src/interfaces/` | Ventanas de tkinter. Solo muestran datos y recogen lo que escribe el usuario; no contienen lógica de negocio. |
+| DEMO A - MAÑANA | Lunes a viernes, 07:00–12:00 |
+| DEMO B - TARDE | Lunes a viernes, 13:00–18:00 |
+| DEMO C - MIXTO | Lunes, 07:00–10:00; martes, 14:00–17:00 |
 
-Gracias a esta separación, cambiar de librería gráfica solo implica reescribir `interfaces/`.
+El periodo de demostración tiene el código `DEMO-2027`.
 
-### Archivos de la interfaz
+### Cuentas
 
-- `ventana_login.py`: pantalla de inicio de sesión (correo, contraseña, opción de mostrar contraseña y mensaje de error dentro del formulario).
-- `ventana_principal.py`: ventana que se abre tras iniciar sesión. Es la misma para los tres roles: muestra el nombre y el rol en la cabecera, el perfil del usuario y el botón de cerrar sesión. Usa `mostrar_perfil()`, que cada clase hija implementa a su manera (polimorfismo).
-- `aplicacion.py`: controla el recorrido de pantallas (login → ventana principal → cerrar sesión → login).
-
-### Usuarios de ejemplo
-
-Datos de prueba creados por `crear_gestor_con_datos_ejemplo()` (contraseña de los tres: `clave1234`):
-
-| Rol | Correo |
+| Usuario | Rol |
 |---|---|
-| Administrador académico | `javier@uleam.edu.ec` |
-| Docente | `carlos.perez@uleam.edu.ec` |
-| Estudiante | `e1312345678@live.uleam.edu.ec` |
+| `demo_coordinador` | Coordinador |
+| `demo_docente_manana` | Docente |
+| `demo_docente_tarde` | Docente |
+| `demo_docente_mixto` | Docente |
+| `demo_estudiante_manana` | Estudiante |
+| `demo_estudiante_tarde` | Estudiante |
+| `demo_estudiante_mixto` | Estudiante |
 
-## Flujo de trabajo con Git
+Las contraseñas se generan aleatoriamente y se muestran al crear
+las cuentas. Deben guardarse en ese momento.
 
-- `main`: versión estable.
-- `develop`: rama de integración donde se suben los avances del equipo.
+Repetir el comando conserva los registros y las contraseñas existentes.
+No crea ni publica propuestas automáticamente.
 
-## Estado del proyecto
+El comando solo está habilitado con `DEBUG=True`.
 
-En desarrollo.
+### Recorrido recomendado
 
-Pendiente:
+1. Iniciar sesión como `demo_coordinador`.
+2. Abrir Gestión de horarios → Generar propuesta.
+3. Seleccionar el periodo `DEMO-2027` y sus seis necesidades.
+4. Generar el borrador: se solicitan 12 sesiones de 90 minutos.
+5. Revisar los bloques y cualquier diagnóstico de pendientes.
+6. Enviar la propuesta a revisión.
+7. Aprobar y publicar el horario.
+8. Consultar el calendario del periodo y aplicar sus filtros.
+9. Probar la impresión o guardar el horario como PDF.
+10. Ingresar como docente o estudiante y comprobar su consulta limitada.
 
-- Pestañas de horario y cambio de contraseña en la ventana principal.
-- Registro de usuarios nuevos.
-- Integrar la clase `Horario` con los usuarios (`ver_horario()` devuelve por ahora un texto provisional).
+El generador considera todas las aulas activas, incluidas las que
+existían antes de cargar la demostración.
+
+## Roles y acceso
+
+| Rol | Alcance |
+|---|---|
+| Coordinador | Gestiona la planificación, revisa propuestas y publica horarios. |
+| Docente | Consulta las clases oficiales que tiene asignadas. |
+| Estudiante | Consulta las clases oficiales de los paralelos en los que está inscrito. |
+| Superusuario | Administra el sistema mediante el panel de Django. |
+
+Los grupos Docente y Estudiante no reciben el permiso global
+`view_horario`, porque permite consultar todos los horarios.
+
+## Reglas de planificación
+
+Una clase propuesta debe respetar:
+
+- Las franjas generales activas de su periodo.
+- La disponibilidad activa del docente.
+- Las franjas propias activas del Paralelo/Curso, cuando existen.
+- La carga semanal máxima del docente.
+- Los conflictos de docente, paralelo y aula.
+- La duración solicitada para la sesión.
+
+Si un paralelo no tiene ninguna franja propia activa, se utilizan
+las franjas generales del periodo.
+
+Cuando existen franjas propias activas, los días sin franjas propias
+quedan fuera de la búsqueda.
+
+## Generación y pendientes
+
+El generador busca espacios por orden y guarda un borrador para
+revisión humana. No garantiza encontrar la mejor distribución ni
+demostrar que una sesión es imposible de ubicar.
+
+El paso de búsqueda determina la separación entre las horas de inicio
+que se prueban. Un paso menor puede encontrar otros espacios, con
+un mayor número de intentos.
+
+Reintentar pendientes:
+
+- Solo está disponible en borradores y requiere permiso.
+- Conserva los bloques existentes.
+- Comprueba que los bloques conservados siguen siendo válidos.
+- Busca únicamente las sesiones faltantes.
+- Actualiza el diagnóstico de la búsqueda.
+
+Si las condiciones no cambian, un reintento puede producir el mismo
+resultado.
+
+## Pruebas y comprobaciones
+
+Desde la carpeta `web`:
+
+```powershell
+..\.venv\Scripts\python.exe manage.py check
+..\.venv\Scripts\python.exe manage.py test
+..\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+```
+
+Para ejecutar las pruebas de franjas por paralelo y reintentos:
+
+```powershell
+..\.venv\Scripts\python.exe manage.py test planificacion.test_franja_paralelos --verbosity 2
+```
+
+La última ejecución completa reportada durante el desarrollo
+finalizó con 228 pruebas correctas.
+
+## Configuración
+
+| Variable de entorno | Uso |
+|---|---|
+| `DJANGO_DEBUG` | Activa o desactiva el modo de desarrollo. Predeterminado: `true`. |
+| `DJANGO_SECRET_KEY` | Clave privada del entorno. Obligatoria con `DEBUG=False`. |
+| `DJANGO_ALLOWED_HOSTS` | Hosts permitidos, separados por comas. Predeterminado: `localhost,127.0.0.1`. |
+
+La configuración actual utiliza variables del entorno del proceso.
+No carga automáticamente archivos `.env`.
+
+En desarrollo existe una clave de respaldo identificada como insegura.
+No debe utilizarse en producción.
+
+La preparación para producción y el despliegue siguen pendientes.
+El ajuste de estas variables no sustituye la configuración de HTTPS,
+archivos estáticos y servidor de aplicación.
+
+## Organización
+
+- `web/config/`: configuración y rutas principales de Django.
+- `web/usuarios/`: cuentas, perfiles, roles y servicios de acceso.
+- `web/academico/`: programas, periodos, paralelos, asignaturas y aulas.
+- `web/planificacion/`: horarios, propuestas, generación y validaciones.
+- `web/planificacion/vistas/`: vistas organizadas por responsabilidad.
+- `web/planificacion/templates/`: plantillas HTML.
+- `web/planificacion/static/`: CSS y JavaScript.
+- `web/planificacion/management/commands/`: comandos de administración.
+- `src/` y `tests/`: código y pruebas de la versión anterior de escritorio.
+- `docs/README_tkinter.md`: documentación histórica de esa versión.
+
+La aplicación Django utiliza `web/db.sqlite3`.
+La base antigua `datos/chronos.db` pertenece a la versión de escritorio.
+
+## Estado
+
+Versión web funcional en desarrollo. Se ha comprobado el recorrido de
+generación, revisión, publicación, consulta por roles e impresión
+con los datos de demostración.
+
+Pendientes de entrega:
+
+- Comprobar la instalación en un entorno virtual nuevo.
+- Completar la configuración de producción.
+- Desplegar y comprobar la versión publicada.
