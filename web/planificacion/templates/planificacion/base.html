@@ -154,6 +154,16 @@
                 </a>
             {% endif %}
 
+            {% if perms.academico.view_programaacademico %}
+                <a class="nav-link {% if ruta_actual == 'lista_programas' or ruta_actual == 'nuevo_programa' or ruta_actual == 'editar_programa' %}selected{% endif %}"
+                   href="{% url 'planificacion_web:lista_programas' %}">
+                    <svg class="nav-icon" aria-hidden="true">
+                        <use href="#icon-book"/>
+                    </svg>
+                    Programas académicos
+                </a>
+            {% endif %}
+
             {% if perms.academico.view_periodoacademico %}
                 <a class="nav-link {% if ruta_actual == 'lista_periodos' or ruta_actual == 'nuevo_periodo' %}selected{% endif %}"
                    href="{% url 'planificacion_web:lista_periodos' %}">

@@ -13,6 +13,50 @@
 </section>
 
 <section class="panel">
+
+    {% if mostrar_regla_disponibilidad %}
+    <section class="panel" aria-labelledby="regla-disponibilidad">
+        <h2 id="regla-disponibilidad">
+            Disponibilidad predeterminada
+        </h2>
+
+        <p>
+            Si un docente no tiene ninguna disponibilidad registrada
+            en un periodo, se considera disponible de
+            <strong>lunes a viernes, de 07:00 a 20:00</strong>.
+        </p>
+
+        <p class="muted">
+            Este horario se aplica automáticamente y no aparece
+            como registro en la lista inferior.
+            Las franjas del periodo y del Paralelo/Curso
+            también limitan las horas en que puede recibir clases.
+        </p>
+
+        <ul class="detail-list">
+            <li>
+                Para personalizarlo, registra todos los días
+                e intervalos en que el docente puede impartir clases
+                durante ese periodo.
+            </li>
+            <li>
+                Al guardar el primer registro, se sustituye
+                toda la semana predeterminada.
+                Los días sin intervalos activos quedan sin disponibilidad.
+            </li>
+            <li>
+                Si todos sus registros están inactivos,
+                el docente queda sin disponibilidad.
+            </li>
+        </ul>
+
+        <p class="muted">
+            Ejemplo: si registras únicamente el lunes de 08:00 a 12:00,
+            el docente estará disponible solo en ese intervalo
+            para el periodo seleccionado.
+        </p>
+    </section>
+{% endif %}
     <h2>Registros existentes</h2>
     <p class="muted">{{ pagina.paginator.count }} registros</p>
 
@@ -42,7 +86,17 @@
     {% empty %}
         <div class="empty-state">
             <h3>Todavía no hay registros.</h3>
-            <p>Utiliza el formulario inferior para agregar el primero.</p>
+            {% if mostrar_regla_disponibilidad %}
+                <p>
+                    No hay disponibilidades personalizadas registradas.
+                    Se aplica el horario predeterminado.
+                    Utiliza el formulario inferior si necesitas personalizarlo.
+                </p>
+            {% else %}
+                <p>
+                    Utiliza el formulario inferior para agregar el primero.
+                </p>
+            {% endif %}
         </div>
     {% endfor %}
 

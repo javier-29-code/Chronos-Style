@@ -44,6 +44,9 @@ from .vistas.catalogos import (
     detalle_paralelo_web,
     franja_paralelo_form_web,
     estado_franja_paralelo_web,
+    lista_programas,
+    programa_form_web,
+    estado_programa,
 )
 
 from .vistas.propuestas import reintentar_pendientes_web
@@ -235,5 +238,26 @@ urlpatterns = [
         "propuestas/<int:propuesta_id>/reintentar-pendientes/",
         reintentar_pendientes_web,
         name="reintentar_pendientes",
+    ),
+    
+    path(
+        "programas/",
+        lista_programas,
+        name="lista_programas",
+    ),
+    path(
+        "programas/nuevo/",
+        programa_form_web,
+        name="nuevo_programa",
+    ),
+    path(
+        "programas/<int:programa_id>/editar/",
+        programa_form_web,
+        name="editar_programa",
+    ),
+    path(
+        "programas/<int:programa_id>/estado/",
+        estado_programa,
+        name="estado_programa",
     ),
 ]

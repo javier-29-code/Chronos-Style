@@ -72,7 +72,9 @@
         class="calendar-dialog"
         aria-labelledby="calendar-detail-title">
     <form method="dialog" class="dialog-heading">
-        <span class="eyebrow">CLASE OFICIAL</span>
+        <span class="eyebrow">
+            {{ etiqueta_clase|default:"CLASE OFICIAL" }}
+        </span>
         <button class="button-quiet" aria-label="Cerrar detalle">×</button>
     </form>
 

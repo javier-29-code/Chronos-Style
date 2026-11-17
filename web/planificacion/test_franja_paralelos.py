@@ -427,3 +427,128 @@ class FranjasParaleloTests(TestCase):
         )
         self.assertEqual(propuesta.bloques.count(), 1)
         self.assertFalse(propuesta.obtener_pendientes())
+        
+    def test_sin_disponibilidad_registrada_permite_generar(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).delete()
+
+        resultado = GeneradorHorarios().generar(
+            usuario=self.actor,
+            nombre="Disponibilidad predeterminada",
+            periodo_id=self.periodo.pk,
+            necesidades_ids=[self.necesidad.pk],
+        )
+
+        self.assertFalse(resultado["pendientes"])
+        self.assertEqual(
+            resultado["propuesta"].bloques.count(),
+            1,
+        )
+
+        # Usar el valor predeterminado no crea registros.
+        self.assertFalse(
+            DisponibilidadDocente.objects.filter(
+                docente=self.docente,
+                periodo=self.periodo,
+            ).exists()
+        )
+
+    def test_predeterminada_limita_busqueda_a_7_y_20(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).delete()
+
+        FranjaPlanificacion.objects.filter(
+            periodo=self.periodo,
+        ).update(
+            hora_inicio=time(6),
+            hora_fin=time(22),
+        )
+
+        espacios = self.espacios()
+
+        self.assertTrue(espacios)
+        for _, inicio, fin in espacios:
+            self.assertGreaterEqual(inicio, time(7))
+            self.assertLessEqual(fin, time(20))
+
+    def test_predeterminada_no_incluye_sabado(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).delete()
+
+        FranjaPlanificacion.objects.create(
+            periodo=self.periodo,
+            dia=Horario.Dia.SABADO,
+            hora_inicio=time(7),
+            hora_fin=time(20),
+        )
+
+        self.assertNotIn(
+            Horario.Dia.SABADO,
+            {dia for dia, _, _ in self.espacios()},
+        )
+
+    def test_personalizada_sustituye_toda_la_semana_predeterminada(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).delete()
+
+        DisponibilidadDocente.objects.create(
+            docente=self.docente,
+            periodo=self.periodo,
+            dia=Horario.Dia.LUNES,
+            hora_inicio=time(14),
+            hora_fin=time(16),
+        )
+
+        espacios = self.espacios()
+
+        self.assertTrue(espacios)
+        for dia, inicio, fin in espacios:
+            self.assertEqual(dia, Horario.Dia.LUNES)
+            self.assertGreaterEqual(inicio, time(14))
+            self.assertLessEqual(fin, time(16))
+
+    def test_desactivar_todas_no_restaura_predeterminada(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).update(activo=False)
+
+        self.assertEqual(self.espacios(), [])
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "disponibilidad",
+        ):
+            self.candidato(
+                time(8),
+                time(9),
+            ).validar_para_propuesta()
+
+    def test_predeterminada_respeta_franja_del_paralelo(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+        ).delete()
+
+        self.franja(time(14), time(16))
+
+        espacios = self.espacios()
+
+        self.assertTrue(espacios)
+        for dia, inicio, fin in espacios:
+            self.assertEqual(dia, Horario.Dia.LUNES)
+            self.assertGreaterEqual(inicio, time(14))
+            self.assertLessEqual(fin, time(16))
+
+        self.candidato(
+            time(14),
+            time(15),
+        ).validar_para_propuesta()

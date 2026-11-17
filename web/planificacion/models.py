@@ -11,6 +11,7 @@ from django.conf import settings
 
 from .validaciones_paralelo import ValidadorFranjaParalelo
 
+from .disponibilidad_efectiva import DisponibilidadDocenteEfectiva
 class Horario(models.Model):
     """Clase semanal de un grupo durante su periodo académico."""
 
@@ -311,12 +312,10 @@ class Horario(models.Model):
             dia=self.dia,
             activo=True,
         )
-        disponibilidades = DisponibilidadDocente.objects.filter(
+        disponibilidades = DisponibilidadDocenteEfectiva.obtener(
             docente_id=self.docente_id,
-            periodo=periodo,
-            dia=self.dia,
-            activo=True,
-        )
+            periodo_id=periodo.pk,
+        )[self.dia]
 
         errores = {}
 
@@ -346,12 +345,15 @@ class Horario(models.Model):
     @staticmethod
     def _cubre_intervalo(ventanas, inicio, fin):
         """Comprueba cobertura continua, sin huecos."""
+        if hasattr(ventanas, "values_list"):
+            ventanas = ventanas.values_list(
+                "hora_inicio",
+                "hora_fin",
+            )
+
         cubierto_hasta = inicio
 
-        for desde, hasta in ventanas.order_by(
-            "hora_inicio",
-            "hora_fin",
-        ).values_list("hora_inicio", "hora_fin"):
+        for desde, hasta in sorted(ventanas):
             if hasta <= cubierto_hasta:
                 continue
 

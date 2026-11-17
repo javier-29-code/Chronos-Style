@@ -13,7 +13,7 @@ from ..generador_horarios import GeneradorHorarios
 from django.views.decorators.http import require_POST
 from ..servicios import enviar_propuesta_revision as enviar_a_revision, aprobar_propuesta as publicar_propuesta, devolver_propuesta_borrador, editar_bloque_propuesta, retirar_publicacion, agregar_sesion_pendiente
 from django.core.paginator import Paginator
-
+from ..calendario import CalendarioSemanal
 
 @login_required
 @permission_required(
@@ -112,6 +112,41 @@ def detalle_propuesta(request, propuesta_id):
         ).order_by("dia", "hora_inicio", "pk")
     )
 
+    paralelos_por_id = {
+        str(bloque.necesidad.paralelo_id): bloque.necesidad.paralelo
+        for bloque in bloques
+    }
+
+    paralelo_id = request.GET.get("paralelo", "").strip()
+    paralelo_seleccionado = None
+
+    if paralelo_id:
+        paralelo_seleccionado = paralelos_por_id.get(paralelo_id)
+
+        if paralelo_seleccionado is None:
+            raise Http404(
+                "El paralelo no tiene bloques en esta propuesta."
+            )
+
+    bloques_calendario = [
+        bloque
+        for bloque in bloques
+        if (
+            paralelo_seleccionado is None
+            or bloque.necesidad.paralelo_id == paralelo_seleccionado.pk
+        )
+    ]
+
+    calendario_propuesta = CalendarioSemanal().construir(
+        bloque.como_horario()
+        for bloque in bloques_calendario
+    )
+
+    paralelos_calendario = sorted(
+        paralelos_por_id.values(),
+        key=lambda paralelo: (paralelo.nombre, paralelo.pk),
+    )
+    
     error_alcance = None
     pendientes = []
 
@@ -161,6 +196,10 @@ def detalle_propuesta(request, propuesta_id):
             "error_alcance": error_alcance,
             "diagnosticos": diagnosticos,
             "form_reintento": ReintentarPendientesForm(),
+            "calendario_propuesta": calendario_propuesta,
+            "paralelos_calendario": paralelos_calendario,
+            "paralelo_seleccionado": paralelo_seleccionado,
+            "total_bloques_calendario": len(bloques_calendario),
         },
     )
 

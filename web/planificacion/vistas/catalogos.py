@@ -22,6 +22,9 @@ from ..formularios_web import FranjaParaleloForm
 from ..models import FranjaParalelo
 from ..servicios_franjas_paralelo import guardar_franja_paralelo
 
+from academico.models import ProgramaAcademico
+from ..formularios_web import ProgramaAcademicoForm
+
 @login_required
 @permission_required("academico.add_aula", raise_exception=True)
 def nueva_aula(request):
@@ -865,3 +868,151 @@ def estado_franja_paralelo_web(request, paralelo_id, franja_id):
         "planificacion_web:detalle_paralelo",
         paralelo_id=paralelo_id,
     )
+    
+@login_required
+@permission_required(
+    "academico.view_programaacademico",
+    raise_exception=True,
+)
+@require_http_methods(["GET"])
+def lista_programas(request):
+    busqueda = request.GET.get("q", "").strip()[:200]
+    estado = request.GET.get("estado", "activos")
+
+    programas = ProgramaAcademico.objects.all()
+
+    if busqueda:
+        programas = programas.filter(
+            Q(codigo__icontains=busqueda)
+            | Q(nombre__icontains=busqueda)
+        )
+
+    if estado == "activos":
+        programas = programas.filter(activo=True)
+    elif estado == "retirados":
+        programas = programas.filter(activo=False)
+
+    pagina = Paginator(
+        programas.order_by("nombre", "pk"),
+        10,
+    ).get_page(request.GET.get("pagina"))
+
+    filas = [
+        {
+            "nombre": programa.nombre,
+            "detalle": programa.get_nivel_display(),
+            "identificador": programa.codigo,
+            "activo": programa.activo,
+            "url_editar": reverse(
+                "planificacion_web:editar_programa",
+                args=[programa.pk],
+            ),
+            "url_estado": reverse(
+                "planificacion_web:estado_programa",
+                args=[programa.pk],
+            ),
+        }
+        for programa in pagina
+    ]
+
+    return _render_catalogo(
+        request,
+        pagina=pagina,
+        filas=filas,
+        titulo="Programas académicos",
+        descripcion="Carreras y programas de formación de la institución.",
+        url_nuevo=reverse("planificacion_web:nuevo_programa"),
+        puede_agregar=request.user.has_perm(
+            "academico.add_programaacademico"
+        ),
+        puede_cambiar=request.user.has_perm(
+            "academico.change_programaacademico"
+        ),
+        busqueda=busqueda,
+        estado=estado,
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def programa_form_web(request, programa_id=None):
+    editando = programa_id is not None
+
+    permiso = (
+        "academico.change_programaacademico"
+        if editando
+        else "academico.add_programaacademico"
+    )
+
+    if not request.user.has_perm(permiso):
+        raise PermissionDenied(
+            "No tienes permiso para realizar esta operación."
+        )
+
+    programa = (
+        get_object_or_404(ProgramaAcademico, pk=programa_id)
+        if editando
+        else None
+    )
+
+    form = ProgramaAcademicoForm(
+        request.POST if request.method == "POST" else None,
+        instance=programa,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                form.save()
+        except IntegrityError:
+            form.add_error(
+                None,
+                "No se pudo guardar. Comprueba si el código ya existe.",
+            )
+        else:
+            messages.success(request, "Programa académico guardado.")
+            return redirect("planificacion_web:lista_programas")
+
+    return render(
+        request,
+        "planificacion/formulario_catalogo.html",
+        {
+            "form": form,
+            "titulo": (
+                "Editar programa académico"
+                if editando
+                else "Nuevo programa académico"
+            ),
+            "descripcion": (
+                "Registra la carrera o programa de formación "
+                "al que pertenecerán los paralelos/cursos."
+            ),
+            "boton": "Guardar programa",
+        },
+    )
+
+
+@login_required
+@permission_required(
+    "academico.change_programaacademico",
+    raise_exception=True,
+)
+@require_POST
+def estado_programa(request, programa_id):
+    programa = get_object_or_404(
+        ProgramaAcademico,
+        pk=programa_id,
+    )
+    estado = request.POST.get("estado")
+
+    if estado not in {"activo", "retirado"}:
+        messages.error(request, "Acción inválida.")
+    else:
+        programa.activo = estado == "activo"
+        programa.save(update_fields=["activo"])
+        messages.success(
+            request,
+            "Estado del programa académico actualizado.",
+        )
+
+    return redirect("planificacion_web:lista_programas")

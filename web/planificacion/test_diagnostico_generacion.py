@@ -150,8 +150,9 @@ class DiagnosticoGeneracionTests(TestCase):
         )
 
     def test_sin_disponibilidad_informa_la_ausencia(self):
-        self.disponibilidad.delete()
-
+        self.disponibilidad.activo = False
+        self.disponibilidad.save(update_fields=["activo"])
+        
         propuesta = self.generar()["propuesta"]
 
         self.assertIn(

@@ -28,6 +28,7 @@ def _pantalla_preparacion(
     ruta,
     ruta_editar=None,
     permiso_editar=None,
+    mostrar_regla_disponibilidad=False,
 ):
     form = formulario(
         request.POST if request.method == "POST" else None
@@ -65,6 +66,7 @@ def _pantalla_preparacion(
                 if permiso_editar
                 else False
             ),
+            "mostrar_regla_disponibilidad": mostrar_regla_disponibilidad,
         },
     )
 
@@ -123,6 +125,7 @@ def disponibilidades_web(request):
         ruta="planificacion_web:disponibilidades",
         ruta_editar="planificacion_web:editar_disponibilidad",
         permiso_editar="planificacion.change_disponibilidaddocente",
+        mostrar_regla_disponibilidad=True,
     )
 
 

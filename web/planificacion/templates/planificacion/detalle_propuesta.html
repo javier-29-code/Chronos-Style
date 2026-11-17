@@ -173,6 +173,70 @@
 </section>
 {% endif %}
 
+<section class="panel" id="calendario-propuesta">
+    <div class="section-heading">
+        <div>
+            <h2>Calendario de la propuesta</h2>
+            <p class="muted">
+                {{ propuesta.periodo.codigo }} ·
+                {{ total_bloques_calendario }} bloques visibles.
+            </p>
+        </div>
+
+        <span class="badge">
+            {{ propuesta.get_estado_display }}
+        </span>
+    </div>
+
+    {% if bloques %}
+        <form method="get" action="#calendario-propuesta">
+            <div class="calendar-filter-fields">
+                <div class="form-field">
+                    <label for="paralelo-calendario">
+                        Paralelo/Curso
+                    </label>
+
+                    <select id="paralelo-calendario" name="paralelo">
+                        <option value="">Todos los paralelos</option>
+
+                        {% for paralelo in paralelos_calendario %}
+                            <option value="{{ paralelo.pk }}"
+                                    {% if paralelo.pk == paralelo_seleccionado.pk %}selected{% endif %}>
+                                {{ paralelo.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="calendar-filter-actions">
+                    <button class="button" type="submit">
+                        Ver horario
+                    </button>
+
+                    <a class="button-quiet"
+                       href="{% url 'planificacion_web:detalle_propuesta' propuesta.pk %}#calendario-propuesta">
+                        Ver todos
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <p class="muted">
+            Selecciona una clase para consultar sus detalles.
+            Puedes editar las sesiones desde la tabla inferior.
+        </p>
+
+        {% include "planificacion/calendario.html" with calendario=calendario_propuesta etiqueta_clase="CLASE DE LA PROPUESTA" %}
+    {% else %}
+        <div class="empty-state">
+            <h3>Todavía no hay clases ubicadas.</h3>
+            <p>
+                El calendario aparecerá cuando la propuesta tenga bloques.
+            </p>
+        </div>
+    {% endif %}
+</section>
+
 <section class="panel">
     <div class="section-heading">
         <div>

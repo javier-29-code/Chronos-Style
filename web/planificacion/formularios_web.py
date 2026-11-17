@@ -476,3 +476,27 @@ class ReintentarPendientesForm(forms.Form):
             "y puede tardar más."
         ),
     )
+    
+class ProgramaAcademicoForm(forms.ModelForm):
+    class Meta:
+        model = ProgramaAcademico
+        fields = ("codigo", "nombre", "nivel", "activo")
+        labels = {
+            "codigo": "Código",
+            "nombre": "Nombre del programa",
+            "nivel": "Nivel",
+            "activo": "Programa activo",
+        }
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data["codigo"].strip().upper()
+
+        if any(caracter.isspace() for caracter in codigo):
+            raise forms.ValidationError(
+                "El código no puede contener espacios."
+            )
+
+        return codigo
+
+    def clean_nombre(self):
+        return " ".join(self.cleaned_data["nombre"].split())

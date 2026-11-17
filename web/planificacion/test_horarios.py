@@ -639,8 +639,19 @@ class HorarioTests(TestCase):
             hora_fin=time(10, 0),
         )
 
+        candidato = self.horario()
+
+        DisponibilidadDocente.objects.create(
+            docente=candidato.docente,
+            periodo=self.periodo,
+            dia=Horario.Dia.LUNES,
+            hora_inicio=time(8, 0),
+            hora_fin=time(10, 0),
+            activo=False,
+        )
+
         with self.assertRaises(ValidationError) as resultado:
-            self.horario().validar_para_propuesta()
+            candidato.validar_para_propuesta()
 
         self.assertEqual(
             set(resultado.exception.message_dict),

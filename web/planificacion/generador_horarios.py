@@ -18,6 +18,8 @@ from .servicios import _exigir_permiso
 
 from collections import Counter
 
+from .disponibilidad_efectiva import DisponibilidadDocenteEfectiva
+
 class GeneradorHorarios:
     """Genera borradores mediante búsqueda de espacios en orden."""
 
@@ -500,11 +502,12 @@ class GeneradorHorarios:
                 "en este periodo."
             )
 
-        if not DisponibilidadDocente.objects.filter(
-            docente=necesidad.docente,
-            periodo=periodo,
-            activo=True,
-        ).exists():
+        disponibilidad_efectiva = DisponibilidadDocenteEfectiva.obtener(
+            docente_id=necesidad.docente_id,
+            periodo_id=periodo.pk,
+        )
+
+        if not any(disponibilidad_efectiva.values()):
             motivos.append(
                 "El docente no tiene disponibilidad activa "
                 "en este periodo."
@@ -575,6 +578,11 @@ class GeneradorHorarios:
         )
 
         tiene_franjas_propias = bool(franjas_paralelo)
+        
+        disponibilidad_efectiva = DisponibilidadDocenteEfectiva.obtener(
+            docente_id=necesidad.docente_id,
+            periodo_id=periodo.pk,
+        )
 
         for dia in Horario.Dia.values:
             franjas = self._unir_ventanas(
@@ -586,12 +594,7 @@ class GeneradorHorarios:
             )
 
             disponibilidades = self._unir_ventanas(
-                DisponibilidadDocente.objects.filter(
-                    docente=necesidad.docente,
-                    periodo=periodo,
-                    dia=dia,
-                    activo=True,
-                ).values_list("hora_inicio", "hora_fin")
+                disponibilidad_efectiva[dia]
             )
 
             ventanas = self._intersectar_ventanas(
