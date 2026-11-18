@@ -192,8 +192,11 @@ class Aula(models.Model):
     """Espacio físico disponible para impartir clases."""
 
     class Tipo(models.TextChoices):
-        AULA = "AULA", "Aula"
-        LABORATORIO = "LABORATORIO", "Laboratorio"
+        AULA = "AULA", "Aula teórica"
+        LABORATORIO = "LABORATORIO", "Laboratorio general"
+        COMPUTACION = "COMPUTACION", "Laboratorio de computación"
+        ELECTRONICA = "ELECTRONICA", "Laboratorio de electrónica"
+        REDES = "REDES", "Laboratorio de redes"
 
     codigo = models.CharField(max_length=30, unique=True)
     nombre = models.CharField(max_length=100)

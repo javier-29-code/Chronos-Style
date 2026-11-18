@@ -9,6 +9,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from django.conf import settings
 
+from academico.models import Aula
+
 from .validaciones_paralelo import ValidadorFranjaParalelo
 
 from .disponibilidad_efectiva import DisponibilidadDocenteEfectiva
@@ -418,6 +420,17 @@ class NecesidadClase(models.Model):
             "pero podrá proponer un aula común."
         ),
     )
+    tipo_aula_preferida = models.CharField(
+        max_length=15,
+        choices=[
+            (tipo.value, tipo.label)
+            for tipo in (Aula.Tipo.COMPUTACION, Aula.Tipo.ELECTRONICA, Aula.Tipo.REDES)
+        ],
+        blank=True,
+        default="",
+        verbose_name="Laboratorio especializado",
+        help_text="Si lo seleccionas, tiene prioridad sobre la preferencia por cualquier laboratorio.",
+    )
     activo = models.BooleanField(default=True)
 
     class Meta:
@@ -441,6 +454,35 @@ class NecesidadClase(models.Model):
                 name="necesidad_duracion_valida",
             ),
         ]
+
+    def prioridad_aula(self, aula):
+        """Devuelve la prioridad de búsqueda o None si no es candidata."""
+        if self.tipo_aula_preferida:
+            if aula.tipo == self.tipo_aula_preferida:
+                return 0
+            if aula.tipo == Aula.Tipo.AULA:
+                return 1
+            return None
+
+        es_laboratorio = aula.tipo != Aula.Tipo.AULA
+        return int(es_laboratorio != self.prefiere_laboratorio)
+
+    def aviso_aula(self, aula, numero_sesion):
+        if self.prioridad_aula(aula) == 0:
+            return None
+
+        if self.tipo_aula_preferida:
+            recomendado = self.get_tipo_aula_preferida_display().lower()
+        elif self.prefiere_laboratorio:
+            recomendado = "un laboratorio"
+        else:
+            return None
+
+        return (
+            f"{self.asignatura.codigo}, sesión {numero_sesion}: "
+            f"se recomienda {recomendado}. "
+            f"Se asignó {aula.codigo} ({aula.get_tipo_display()})."
+        )
 
     @property
     def minutos_semanales(self):

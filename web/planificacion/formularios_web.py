@@ -83,6 +83,21 @@ class EditarBloqueForm(forms.ModelForm):
             Aula.objects.filter(activo=True).order_by("codigo")
         )
         
+class MoverBloqueForm(forms.Form):
+    dia = forms.TypedChoiceField(
+        choices=Horario.Dia.choices, coerce=int, label="Día"
+    )
+    hora_inicio = forms.TimeField(
+        label="Hora de inicio",
+        widget=forms.TimeInput(attrs={"type": "time", "step": "any"}),
+    )
+    aula = forms.ModelChoiceField(
+        queryset=Aula.objects.filter(activo=True).order_by("codigo"),
+        required=False,
+        empty_label="Conservar aula actual",
+    )
+
+
 class RetirarPublicacionForm(forms.Form):
     motivo = forms.CharField(
         label="Motivo de la corrección",
@@ -145,6 +160,7 @@ class NecesidadClaseForm(forms.ModelForm):
             "sesiones_semanales",
             "duracion_minutos",
             "prefiere_laboratorio",
+            "tipo_aula_preferida",
             "activo",
         )
 

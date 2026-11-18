@@ -27,11 +27,11 @@ class CalendarioSemanal:
         # Evita comas decimales dentro de los estilos CSS.
         return f"{valor:.3f}"
 
-    def construir(self, horarios):
+    def construir(self, horarios, *, fin_minimo=19 * 60):
         horarios = list(horarios)
 
         inicio = 7 * 60
-        fin = 19 * 60
+        fin = fin_minimo
 
         if horarios:
             inicio = min(
@@ -74,8 +74,11 @@ class CalendarioSemanal:
             if grupo:
                 bloques.extend(self._colocar(grupo, inicio))
 
+            carriles = max((bloque["carriles"] for bloque in bloques), default=1)
             dias.append({
                 "numero": numero,
+                "carriles": carriles,
+                "ancho_minimo": 160 * carriles,
                 "nombre": nombre,
                 "bloques": bloques,
             })
@@ -93,6 +96,8 @@ class CalendarioSemanal:
         return {
             "dias": dias,
             "marcas": marcas,
+            "inicio_minutos": inicio,
+            "fin_minutos": fin,
             "altura": self._numero(
                 (fin - inicio) * self.PIXELES_POR_MINUTO
             ),
@@ -136,6 +141,7 @@ class CalendarioSemanal:
                 ),
                 "izquierda": self._numero(columna * ancho),
                 "ancho": self._numero(ancho),
+                "carriles": len(finales),
                 "color": horario.asignatura_id % 5,
             }
             for horario, inicio, fin, columna in posiciones

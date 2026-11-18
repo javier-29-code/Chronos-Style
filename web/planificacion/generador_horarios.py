@@ -11,7 +11,6 @@ from .models import (
     PropuestaHorario,
     BloquePropuesta,
     FranjaPlanificacion,
-    DisponibilidadDocente,
     FranjaParalelo,
 )
 from .servicios import _exigir_permiso
@@ -113,16 +112,9 @@ class GeneradorHorarios:
             "necesidad__asignatura",
             "aula",
         ):
-            if (
-                bloque.necesidad.prefiere_laboratorio
-                and bloque.aula.tipo != Aula.Tipo.LABORATORIO
-            ):
-                avisos.append(
-                    f"{bloque.necesidad.asignatura.codigo}, "
-                    f"sesión {bloque.numero_sesion}: "
-                    "se recomienda laboratorio; se asignó "
-                    f"el aula {bloque.aula.codigo}."
-                )
+            aviso = bloque.necesidad.aviso_aula(bloque.aula, bloque.numero_sesion)
+            if aviso:
+                avisos.append(aviso)
 
         return {
             "propuesta": propuesta,
@@ -293,20 +285,31 @@ class GeneradorHorarios:
         espacios,
         aulas,
     ):
-        """Prioriza el día antes de buscar aula y hora."""
-        por_dia = {}
+        """Prueba tipos de aula por preferencia y días por carga."""
+        if not espacios or not aulas:
+            return
 
+        por_dia = {}
         for dia, inicio, fin in espacios:
             por_dia.setdefault(dia, []).append((inicio, fin))
 
-        for dia in self._priorizar_dias(
-            propuesta,
-            necesidad,
-            espacios,
-        ):
-            for aula in aulas:
-                for inicio, fin in sorted(por_dia[dia]):
-                    yield dia, aula, inicio, fin
+        dias = self._priorizar_dias(propuesta, necesidad, espacios)
+        intervalos = {dia: sorted(por_dia[dia]) for dia in dias}
+        uso_aulas = Counter(propuesta.bloques.values_list("aula_id", flat=True))
+
+        por_prioridad = {}
+        for prioridad, aula in aulas:
+            por_prioridad.setdefault(prioridad, []).append(aula)
+
+        for prioridad in sorted(por_prioridad):
+            aulas_ordenadas = sorted(
+                por_prioridad[prioridad],
+                key=lambda aula: (uso_aulas[aula.pk], aula.codigo),
+            )
+            for dia in dias:
+                for inicio, fin in intervalos[dia]:
+                    for aula in aulas_ordenadas:
+                        yield dia, aula, inicio, fin
 
     @staticmethod
     def _motivos_sin_espacios(necesidad, periodo):
@@ -450,7 +453,7 @@ class GeneradorHorarios:
                         (cursor + duracion).time(),
                     )
                     cursor += paso
-                    
+
     def _ubicar_sesiones(
         self, propuesta, necesidades, sesiones, aulas, paso_minutos
     ):
@@ -463,21 +466,18 @@ class GeneradorHorarios:
                     necesidad, propuesta.periodo, paso_minutos
                 )
             )
-            aulas_ordenadas = sorted(
-                aulas,
-                key=lambda aula: (
-                    necesidad.prefiere_laboratorio
-                    and aula.tipo != Aula.Tipo.LABORATORIO,
-                    aula.codigo,
-                ),
-            )
+            aulas_candidatas = []
+            for aula in aulas:
+                prioridad = necesidad.prioridad_aula(aula)
+                if prioridad is not None:
+                    aulas_candidatas.append((prioridad, aula))
 
             for numero in sesiones[necesidad.pk]:
                 intentos = 0
                 errores = Counter()
 
                 for dia, aula, inicio, fin in self._candidatos_ordenados(
-                    propuesta, necesidad, espacios, aulas_ordenadas
+                    propuesta, necesidad, espacios, aulas_candidatas
                 ):
                     bloque = BloquePropuesta(
                         propuesta=propuesta,
@@ -508,9 +508,18 @@ class GeneradorHorarios:
                 else:
                     motivos = []
 
-                    if not aulas_ordenadas:
+                    if not aulas:
                         motivos.append({
                             "mensaje": "No hay aulas activas.",
+                            "veces": 0,
+                        })
+
+                    elif not aulas_candidatas:
+                        motivos.append({
+                            "mensaje": (
+                                "No hay aulas teóricas ni laboratorios activos "
+                                "de la especialidad seleccionada."
+                            ),
                             "veces": 0,
                         })
 

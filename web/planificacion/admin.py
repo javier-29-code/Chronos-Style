@@ -59,6 +59,7 @@ class NecesidadClaseAdmin(admin.ModelAdmin):
         "sesiones_semanales",
         "duracion_minutos",
         "prefiere_laboratorio",
+        "tipo_aula_preferida",
         "activo",
     )
     list_filter = (

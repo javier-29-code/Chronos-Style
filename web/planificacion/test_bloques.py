@@ -1314,3 +1314,55 @@ class BloquePropuestaTests(TestCase):
 
         self.assertEqual(respuesta.status_code, 403)
         self.assertEqual(self.propuesta.bloques.count(), 1)
+    def test_mover_desde_calendario_recalcula_fin_y_valida_franjas(self):
+        self._preparar_propuesta_completa()
+        self.client.force_login(self._usuario_editor())
+        bloque = self.propuesta.bloques.order_by("pk").first()
+        url = reverse(
+            "planificacion_web:mover_bloque",
+            args=[self.propuesta.pk, bloque.pk],
+        )
+
+        detalle = self.client.get(reverse(
+            "planificacion_web:detalle_propuesta",
+            args=[self.propuesta.pk],
+        ))
+        self.assertContains(detalle, f'data-mover="{url}"')
+
+        respuesta = self.client.post(url, {
+            "dia": Horario.Dia.LUNES,
+            "hora_inicio": "06:00",
+        })
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertTrue(respuesta.json()["errores"])
+        hora_original = bloque.hora_inicio
+        bloque.refresh_from_db()
+        self.assertEqual(bloque.hora_inicio, hora_original)
+
+        respuesta = self.client.post(url, {
+            "dia": Horario.Dia.LUNES,
+            "hora_inicio": "12:00",
+        })
+        self.assertEqual(respuesta.status_code, 200)
+        bloque.refresh_from_db()
+        self.assertEqual(bloque.hora_inicio, time(12))
+        self.assertEqual(bloque.hora_fin, time(14))
+        self.assertEqual(bloque.aula_id, self.aula.pk)
+        self.assertEqual(Horario.objects.count(), 0)
+
+    def test_mover_desde_calendario_exige_permiso_y_borrador(self):
+        self._preparar_propuesta_completa()
+        bloque = self.propuesta.bloques.order_by("pk").first()
+        url = reverse(
+            "planificacion_web:mover_bloque",
+            args=[self.propuesta.pk, bloque.pk],
+        )
+        datos = {"dia": Horario.Dia.LUNES, "hora_inicio": "12:00"}
+        self.client.force_login(self.propuesta.autor)
+        self.assertEqual(self.client.post(url, datos).status_code, 403)
+
+        self.client.force_login(self._usuario_editor())
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.propuesta.estado = PropuestaHorario.Estado.EN_REVISION
+        self.propuesta.save(update_fields=["estado"])
+        self.assertEqual(self.client.post(url, datos).status_code, 409)

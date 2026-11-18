@@ -677,3 +677,46 @@ class FranjasParaleloTests(TestCase):
         self.assertEqual(original.hora_inicio, time(7))
         self.assertEqual(original.hora_fin, time(8))
         self.assertEqual(original.aula_id, self.aula.pk)
+    def test_generacion_restringe_el_turno_y_prioriza_el_laboratorio_correcto(self):
+        self.franja(time(14), time(18))
+        redes = Aula.objects.create(
+            codigo="LAB-RED", nombre="Redes", tipo=Aula.Tipo.REDES
+        )
+        computacion = Aula.objects.create(
+            codigo="LAB-CPU", nombre="Computación", tipo=Aula.Tipo.COMPUTACION
+        )
+        self.necesidad.prefiere_laboratorio = True
+        self.necesidad.tipo_aula_preferida = Aula.Tipo.REDES
+        self.necesidad.save()
+
+        resultado = self.generar_para_balanceo([self.necesidad])
+        bloque = resultado["propuesta"].bloques.get()
+        self.assertEqual(bloque.aula_id, redes.pk)
+        self.assertEqual(bloque.hora_inicio, time(14))
+        self.assertEqual(resultado["avisos"], [])
+
+        redes.activo = False
+        redes.save(update_fields=["activo"])
+        resultado = self.generar_para_balanceo([self.necesidad])
+        self.assertEqual(resultado["propuesta"].bloques.get().aula_id, self.aula.pk)
+        self.assertIn("laboratorio de redes", resultado["avisos"][0])
+
+        self.aula.activo = False
+        self.aula.save(update_fields=["activo"])
+        resultado = self.generar_para_balanceo([self.necesidad])
+        self.assertTrue(resultado["pendientes"])
+        self.assertFalse(resultado["propuesta"].bloques.exists())
+        self.assertTrue(computacion.activo)
+
+    def test_generacion_prefiere_teoricas_y_reparte_aulas_equivalentes(self):
+        Aula.objects.create(
+            codigo="AAAA", nombre="Laboratorio", tipo=Aula.Tipo.ELECTRONICA
+        )
+        otra_aula = Aula.objects.create(
+            codigo="AULA-Z", nombre="Otra teórica", tipo=Aula.Tipo.AULA
+        )
+        segunda = self.necesidad_para_balanceo("BAL-AULAS")
+
+        resultado = self.generar_para_balanceo([self.necesidad, segunda])
+        aulas = resultado["propuesta"].bloques.values_list("aula_id", flat=True)
+        self.assertCountEqual(aulas, [self.aula.pk, otra_aula.pk])

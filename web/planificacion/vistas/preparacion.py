@@ -251,8 +251,8 @@ def editar_necesidad_web(request, necesidad_id):
             "form": form,
             "titulo": "Editar necesidad de clase",
             "descripcion": (
-                "Las necesidades vinculadas a propuestas "
-                "conservan sus datos y no permiten modificaciones."
+                "Si la necesidad ya se usó en una propuesta, puedes cambiar "
+                "las preferencias de aula para futuras asignaciones."
             ),
             "boton": "Guardar cambios",
         },

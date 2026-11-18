@@ -207,3 +207,25 @@ class EditarNecesidadesTests(TestCase):
         )
         self.necesidad.refresh_from_db()
         self.assertEqual(self.necesidad.duracion_minutos, 60)
+    def test_necesidad_vinculada_permite_cambiar_laboratorio(self):
+        propuesta = PropuestaHorario.objects.create(
+            nombre="Propuesta existente",
+            periodo=self.periodo,
+            autor=self.coordinador,
+        )
+        propuesta.necesidades.add(self.necesidad)
+        self.client.force_login(self.coordinador)
+
+        respuesta = self.client.post(
+            self.url_editar(),
+            self.datos_post(
+                sesiones_semanales=self.necesidad.sesiones_semanales,
+                duracion_minutos=self.necesidad.duracion_minutos,
+                tipo_aula_preferida="ELECTRONICA",
+            ),
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.necesidad.refresh_from_db()
+        self.assertEqual(self.necesidad.tipo_aula_preferida, "ELECTRONICA")
+        self.assertEqual(propuesta.necesidades.get().pk, self.necesidad.pk)

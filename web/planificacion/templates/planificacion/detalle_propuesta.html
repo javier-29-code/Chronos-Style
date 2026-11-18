@@ -223,9 +223,15 @@
 
         <p class="muted">
             Selecciona una clase para consultar sus detalles.
-            Puedes editar las sesiones desde la tabla inferior.
+            {% if form_mover %}
+                Puedes moverla desde sus detalles, arrastrarla a otro día u hora
+                en el calendario, o editarla desde la tabla.
+            {% endif %}
         </p>
 
+        {% if form_mover %}
+            <p id="calendar-move-status" class="notice warning" role="alert" hidden></p>
+        {% endif %}
         {% include "planificacion/calendario.html" with calendario=calendario_propuesta etiqueta_clase="CLASE DE LA PROPUESTA" %}
     {% else %}
         <div class="empty-state">

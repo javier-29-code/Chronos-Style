@@ -20,6 +20,7 @@ def editar_necesidad_clase(
     duracion_minutos,
     prefiere_laboratorio,
     activo,
+    tipo_aula_preferida=None,
 ):
     if not actor.has_perm("planificacion.change_necesidadclase"):
         raise PermissionDenied(
@@ -32,7 +33,15 @@ def editar_necesidad_clase(
         .get(pk=necesidad_id)
     )
 
-    if (
+    cambia_planificacion = (
+        necesidad.asignatura_id != asignatura.pk
+        or necesidad.docente_id != docente.pk
+        or necesidad.paralelo_id != paralelo.pk
+        or necesidad.sesiones_semanales != sesiones_semanales
+        or necesidad.duracion_minutos != duracion_minutos
+        or necesidad.activo != activo
+    )
+    if cambia_planificacion and (
         necesidad.propuestas.exists()
         or necesidad.bloques_propuesta.exists()
     ):
@@ -48,6 +57,8 @@ def editar_necesidad_clase(
     necesidad.sesiones_semanales = sesiones_semanales
     necesidad.duracion_minutos = duracion_minutos
     necesidad.prefiere_laboratorio = prefiere_laboratorio
+    if tipo_aula_preferida is not None:
+        necesidad.tipo_aula_preferida = tipo_aula_preferida
     necesidad.activo = activo
 
     necesidad.full_clean()

@@ -218,3 +218,38 @@
         grid-template-columns: 1fr;
     }
 }
+.calendar-event[draggable="true"] {
+    cursor: grab;
+}
+
+.calendar-event.is-dragging {
+    opacity: .45;
+}
+
+.calendar-day.is-drop-target {
+    background: #eef5ff;
+    box-shadow: inset 0 0 0 2px #3472da;
+}
+
+#calendar-move {
+    margin-top: 20px;
+}
+
+#calendar-move fieldset {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+#calendar-move fieldset p {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+}
+
+#calendar-move fieldset button {
+    justify-self: start;
+}

@@ -1,3 +1,5 @@
+from datetime import date, datetime, timedelta
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
@@ -6,9 +8,10 @@ from ..models import Horario, PropuestaHorario, BloquePropuesta
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from ..formularios_web import GenerarPropuestaForm, EditarBloqueForm, RetirarPublicacionForm, AgregarSesionForm, ReintentarPendientesForm
+from ..formularios_web import MoverBloqueForm
 from ..generador_horarios import GeneradorHorarios
 from django.views.decorators.http import require_POST
 from ..servicios import enviar_propuesta_revision as enviar_a_revision, aprobar_propuesta as publicar_propuesta, devolver_propuesta_borrador, editar_bloque_propuesta, retirar_publicacion, agregar_sesion_pendiente
@@ -137,9 +140,18 @@ def detalle_propuesta(request, propuesta_id):
         )
     ]
 
+    horarios_calendario = []
+    for bloque in bloques_calendario:
+        horario = bloque.como_horario()
+        horario.bloque_origen_id = bloque.pk
+        horarios_calendario.append(horario)
+
     calendario_propuesta = CalendarioSemanal().construir(
-        bloque.como_horario()
-        for bloque in bloques_calendario
+        horarios_calendario, fin_minimo=20 * 60
+    )
+    puede_mover = (
+        propuesta.estado == PropuestaHorario.Estado.BORRADOR
+        and request.user.has_perm("planificacion.change_bloquepropuesta")
     )
 
     paralelos_calendario = sorted(
@@ -173,17 +185,12 @@ def detalle_propuesta(request, propuesta_id):
         ) in sesiones_pendientes
     ]
 
-    avisos = [
-        (
-            f"{bloque.necesidad.asignatura.codigo}, "
-            f"sesión {bloque.numero_sesion}: "
-            "se recomienda laboratorio; se asignó "
-            f"el aula {bloque.aula.codigo}."
-        )
-        for bloque in bloques
-        if bloque.necesidad.prefiere_laboratorio
-        and bloque.aula.tipo != "LABORATORIO"
-    ]
+    avisos = []
+    for bloque in bloques:
+        aviso = bloque.necesidad.aviso_aula(bloque.aula, bloque.numero_sesion)
+        if aviso:
+            avisos.append(aviso)
+
 
     return render(
         request,
@@ -197,6 +204,7 @@ def detalle_propuesta(request, propuesta_id):
             "diagnosticos": diagnosticos,
             "form_reintento": ReintentarPendientesForm(),
             "calendario_propuesta": calendario_propuesta,
+            "form_mover": MoverBloqueForm() if puede_mover else None,
             "paralelos_calendario": paralelos_calendario,
             "paralelo_seleccionado": paralelo_seleccionado,
             "total_bloques_calendario": len(bloques_calendario),
@@ -340,6 +348,52 @@ def editar_bloque_web(request, propuesta_id, bloque_id):
             "propuesta": propuesta,
         },
     )
+
+
+@login_required
+@permission_required("planificacion.change_bloquepropuesta", raise_exception=True)
+@require_POST
+def mover_bloque_web(request, propuesta_id, bloque_id):
+    propuesta = _propuesta_accesible(request.user, propuesta_id)
+    bloque = get_object_or_404(
+        BloquePropuesta.objects.select_related("necesidad"),
+        pk=bloque_id,
+        propuesta=propuesta,
+    )
+    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
+        return JsonResponse(
+            {"errores": ["Solo se pueden mover bloques en borradores."]},
+            status=409,
+        )
+
+    form = MoverBloqueForm(request.POST)
+    if not form.is_valid():
+        errores = [mensaje for campo in form.errors.values() for mensaje in campo]
+        return JsonResponse({"errores": errores}, status=400)
+
+    inicio = datetime.combine(date(2000, 1, 1), form.cleaned_data["hora_inicio"])
+    fin = inicio + timedelta(minutes=bloque.necesidad.duracion_minutos)
+    if fin.date() != inicio.date():
+        return JsonResponse(
+            {"errores": ["La clase debe terminar el mismo día."]},
+            status=400,
+        )
+
+    cambios = {
+        "dia": form.cleaned_data["dia"],
+        "hora_inicio": inicio.time(),
+        "hora_fin": fin.time(),
+    }
+    if form.cleaned_data["aula"] is not None:
+        cambios["aula"] = form.cleaned_data["aula"]
+
+    try:
+        editar_bloque_propuesta(usuario=request.user, bloque_id=bloque.pk, **cambios)
+    except ValidationError as error:
+        return JsonResponse({"errores": error.messages}, status=400)
+
+    messages.success(request, "Clase movida en el calendario.")
+    return JsonResponse({"ok": True})
 
 
 @login_required

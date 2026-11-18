@@ -1,9 +1,13 @@
+{% load l10n %}
 <div class="calendar-scroll"
      role="region"
      aria-label="Calendario semanal"
      tabindex="0">
 
-    <div class="calendar-layout">
+    <div class="calendar-layout"
+         style="grid-template-columns: 72px {% for dia in calendario.dias %}minmax({{ dia.ancho_minimo|unlocalize }}px, {{ dia.carriles|unlocalize }}fr) {% endfor %}"
+         data-inicio="{{ calendario.inicio_minutos|unlocalize }}"
+         data-fin="{{ calendario.fin_minutos|unlocalize }}">
         <div class="calendar-corner">HORA</div>
 
         {% for dia in calendario.dias %}
@@ -21,6 +25,7 @@
 
         {% for dia in calendario.dias %}
             <div class="calendar-day"
+                 data-dia-calendario="{{ dia.numero }}"
                  style="height: {{ calendario.altura }}px;">
 
                 {% for marca in calendario.marcas %}
@@ -42,10 +47,17 @@
                         aria-controls="calendar-detail"
                         aria-label="{{ bloque.horario.asignatura.nombre }}, {{ dia.nombre }}, {{ bloque.horario.hora_inicio|time:'H:i' }} a {{ bloque.horario.hora_fin|time:'H:i' }}, {{ bloque.horario.paralelo.nombre }}"
                         data-calendar-event
+                        {% if form_mover and bloque.horario.bloque_origen_id %}
+                            draggable="true"
+                            data-mover="{% url 'planificacion_web:mover_bloque' propuesta.pk bloque.horario.bloque_origen_id %}"
+                            data-dia-numero="{{ dia.numero }}"
+                            data-hora-inicio="{{ bloque.horario.hora_inicio|time:"H:i:s" }}"
+                            data-aula-id="{{ bloque.horario.aula_id|unlocalize }}"
+                        {% endif %}
                         data-asignatura="{{ bloque.horario.asignatura.nombre }}"
                         data-docente="{{ bloque.horario.docente.usuario.get_full_name|default:bloque.horario.docente.usuario.username }}"
                         data-paralelo="{{ bloque.horario.paralelo.nombre }}"
-                        data-aula="{{ bloque.horario.aula.codigo }}"
+                        data-aula="{{ bloque.horario.aula.codigo }} · {{ bloque.horario.aula.get_tipo_display }}"
                         data-dia="{{ dia.nombre }}"
                         data-horas="{{ bloque.horario.hora_inicio|time:'H:i' }}–{{ bloque.horario.hora_fin|time:'H:i' }}">
 
@@ -96,4 +108,16 @@
         <dt>Aula</dt>
         <dd data-detalle="aula"></dd>
     </dl>
+
+    {% if form_mover %}
+        <form method="post" id="calendar-move">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Mover clase</legend>
+                {{ form_mover.as_p }}
+                <button class="button" type="submit">Guardar ubicación</button>
+            </fieldset>
+            <p id="calendar-move-error" class="notice warning" role="alert" hidden></p>
+        </form>
+    {% endif %}
 </dialog>

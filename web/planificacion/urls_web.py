@@ -49,7 +49,7 @@ from .vistas.catalogos import (
     estado_programa,
 )
 
-from .vistas.propuestas import reintentar_pendientes_web
+from .vistas.propuestas import mover_bloque_web, reintentar_pendientes_web
 
 app_name = "planificacion_web"
 
@@ -97,6 +97,11 @@ urlpatterns = [
         name="editar_bloque",
     ),
     
+    path(
+        "propuestas/<int:propuesta_id>/bloques/<int:bloque_id>/mover/",
+        mover_bloque_web,
+        name="mover_bloque",
+    ),
     path(
         "propuestas/<int:propuesta_id>/devolver-borrador/",
         devolver_borrador_web,
