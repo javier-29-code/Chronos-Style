@@ -93,140 +93,13 @@ class GeneradorHorarios:
             Aula.objects.filter(activo=True).order_by("codigo")
         )
 
-        diagnosticos = []
-
-        for necesidad in necesidades:
-            espacios = list(
-                self._espacios_posibles(
-                    necesidad,
-                    periodo,
-                    paso_minutos,
-                )
-            )
-
-            aulas_ordenadas = sorted(
-                aulas,
-                key=lambda aula: (
-                    necesidad.prefiere_laboratorio
-                    and aula.tipo != Aula.Tipo.LABORATORIO,
-                    aula.codigo,
-                ),
-            )
-
-            for numero in range(1, necesidad.sesiones_semanales + 1):
-                dias_usados = set(
-                    propuesta.bloques.filter(
-                        necesidad__asignatura_id=necesidad.asignatura_id,
-                        necesidad__paralelo_id=necesidad.paralelo_id,
-                    ).values_list("dia", flat=True)
-                )
-
-                dias_ordenados = sorted(
-                    {dia for dia, _, _ in espacios},
-                    key=lambda dia: (
-                        dia in dias_usados,
-                        dia,
-                    ),
-                )
-
-                ubicado = False
-                intentos = 0
-                errores = Counter()
-
-                for dia_elegido in dias_ordenados:
-                    for aula in aulas_ordenadas:
-                        for dia, inicio, fin in espacios:
-                            if dia != dia_elegido:
-                                continue
-
-                            bloque = BloquePropuesta(
-                                propuesta=propuesta,
-                                necesidad=necesidad,
-                                numero_sesion=numero,
-                                aula=aula,
-                                dia=dia,
-                                hora_inicio=inicio,
-                                hora_fin=fin,
-                            )
-                            intentos += 1
-
-                            try:
-                                with transaction.atomic():
-                                    bloque.full_clean()
-                                    bloque.save()
-                                    propuesta.validar_bloques()
-
-                            except ValidationError as error:
-                                for mensaje in error.messages:
-                                    # Ese bloque candidato se revierte:
-                                    # evitamos mostrar su identificador
-                                    # como si fuera un bloque conservado.
-                                    prefijo = f"Bloque #{bloque.pk}: "
-
-                                    if bloque.pk and mensaje.startswith(prefijo):
-                                        mensaje = (
-                                            "Clase candidata: "
-                                            + mensaje[len(prefijo):]
-                                        )
-
-                                    errores[mensaje] += 1
-
-                                continue
-
-                            ubicado = True
-                            break
-
-                        if ubicado:
-                            break
-
-                    if ubicado:
-                        break
-
-                if not ubicado:
-                    motivos = []
-
-                    if not aulas:
-                        motivos.append({
-                            "mensaje": "No hay aulas activas.",
-                            "veces": 0,
-                        })
-
-                    if not espacios:
-                        motivos.extend(
-                            {
-                                "mensaje": mensaje,
-                                "veces": 0,
-                            }
-                            for mensaje in self._motivos_sin_espacios(
-                                necesidad,
-                                periodo,
-                            )
-                        )
-
-                    motivos.extend(
-                        {
-                            "mensaje": mensaje,
-                            "veces": cantidad,
-                        }
-                        for mensaje, cantidad in errores.most_common(5)
-                    )
-
-                    if not motivos:
-                        motivos.append({
-                            "mensaje": (
-                                "No se encontró una ubicación "
-                                "con el orden y paso de búsqueda utilizados."
-                            ),
-                            "veces": 0,
-                        })
-
-                    diagnosticos.append({
-                        "necesidad_id": necesidad.pk,
-                        "numero_sesion": numero,
-                        "descripcion": str(necesidad),
-                        "intentos": intentos,
-                        "motivos": motivos,
-                    })
+        sesiones = {
+            necesidad.pk: range(1, necesidad.sesiones_semanales + 1)
+            for necesidad in necesidades
+        }
+        _, diagnosticos = self._ubicar_sesiones(
+            propuesta, necesidades, sesiones, aulas, paso_minutos
+        )
 
         propuesta.diagnostico_generacion = {
             "paso_minutos": paso_minutos,
@@ -347,129 +220,9 @@ class GeneradorHorarios:
             Aula.objects.filter(activo=True).order_by("codigo")
         )
 
-        agregadas = 0
-        diagnosticos = []
-
-        for necesidad in necesidades:
-            espacios = list(
-                self._espacios_posibles(
-                    necesidad,
-                    propuesta.periodo,
-                    paso_minutos,
-                )
-            )
-
-            aulas_ordenadas = sorted(
-                aulas,
-                key=lambda aula: (
-                    necesidad.prefiere_laboratorio
-                    and aula.tipo != Aula.Tipo.LABORATORIO,
-                    aula.codigo,
-                ),
-            )
-
-            for numero in sesiones_faltantes[necesidad.pk]:
-                dias_usados = set(
-                    propuesta.bloques.filter(
-                        necesidad__asignatura_id=necesidad.asignatura_id,
-                        necesidad__paralelo_id=necesidad.paralelo_id,
-                    ).values_list("dia", flat=True)
-                )
-
-                espacios_ordenados = sorted(
-                    espacios,
-                    key=lambda espacio: (
-                        espacio[0] in dias_usados,
-                        espacio[0],
-                        espacio[1],
-                    ),
-                )
-
-                ubicado = False
-                intentos = 0
-                errores = Counter()
-
-                for aula in aulas_ordenadas:
-                    for dia, inicio, fin in espacios_ordenados:
-                        bloque = BloquePropuesta(
-                            propuesta=propuesta,
-                            necesidad=necesidad,
-                            numero_sesion=numero,
-                            aula=aula,
-                            dia=dia,
-                            hora_inicio=inicio,
-                            hora_fin=fin,
-                        )
-                        intentos += 1
-
-                        try:
-                            with transaction.atomic():
-                                bloque.full_clean()
-                                bloque.save()
-                                propuesta.validar_bloques()
-
-                        except ValidationError as error:
-                            for mensaje in error.messages:
-                                prefijo = f"Bloque #{bloque.pk}: "
-
-                                if bloque.pk and mensaje.startswith(prefijo):
-                                    mensaje = (
-                                        "Clase candidata: "
-                                        + mensaje[len(prefijo):]
-                                    )
-
-                                errores[mensaje] += 1
-
-                            continue
-
-                        agregadas += 1
-                        ubicado = True
-                        break
-
-                    if ubicado:
-                        break
-
-                if ubicado:
-                    continue
-
-                motivos = []
-
-                if not aulas:
-                    motivos.append({
-                        "mensaje": "No hay aulas activas.",
-                        "veces": 0,
-                    })
-
-                if not espacios:
-                    motivos.extend(
-                        {"mensaje": mensaje, "veces": 0}
-                        for mensaje in self._motivos_sin_espacios(
-                            necesidad,
-                            propuesta.periodo,
-                        )
-                    )
-
-                motivos.extend(
-                    {"mensaje": mensaje, "veces": cantidad}
-                    for mensaje, cantidad in errores.most_common(5)
-                )
-
-                if not motivos:
-                    motivos.append({
-                        "mensaje": (
-                            "No se encontró una ubicación con el orden "
-                            "y paso de búsqueda utilizados."
-                        ),
-                        "veces": 0,
-                    })
-
-                diagnosticos.append({
-                    "necesidad_id": necesidad.pk,
-                    "numero_sesion": numero,
-                    "descripcion": str(necesidad),
-                    "intentos": intentos,
-                    "motivos": motivos,
-                })
+        agregadas, diagnosticos = self._ubicar_sesiones(
+            propuesta, necesidades, sesiones_faltantes, aulas, paso_minutos
+        )
 
         propuesta.diagnostico_generacion = {
             "tipo": "reintento",
@@ -488,6 +241,72 @@ class GeneradorHorarios:
             "agregadas": agregadas,
             "pendientes": propuesta.obtener_pendientes(),
         }
+
+    @staticmethod
+    def _priorizar_dias(propuesta, necesidad, espacios):
+        """Ordena días según asignatura y carga del paralelo."""
+        carga = Counter()
+        dias_asignatura = set()
+
+        bloques = propuesta.bloques.filter(
+            necesidad__paralelo_id=necesidad.paralelo_id,
+        ).values_list(
+            "dia",
+            "hora_inicio",
+            "hora_fin",
+            "necesidad__asignatura_id",
+        )
+
+        oficiales = Horario.objects.filter(
+            paralelo_id=necesidad.paralelo_id,
+        ).values_list(
+            "dia",
+            "hora_inicio",
+            "hora_fin",
+            "asignatura_id",
+        )
+
+        for registros in (bloques, oficiales):
+            for dia, inicio, fin, asignatura_id in registros:
+                duracion = (
+                    datetime.combine(propuesta.periodo.fecha_inicio, fin)
+                    - datetime.combine(propuesta.periodo.fecha_inicio, inicio)
+                )
+                carga[dia] += duracion.total_seconds()
+
+                if asignatura_id == necesidad.asignatura_id:
+                    dias_asignatura.add(dia)
+
+        return sorted(
+            {dia for dia, _, _ in espacios},
+            key=lambda dia: (
+                dia in dias_asignatura,
+                carga[dia],
+                dia,
+            ),
+        )
+
+    def _candidatos_ordenados(
+        self,
+        propuesta,
+        necesidad,
+        espacios,
+        aulas,
+    ):
+        """Prioriza el día antes de buscar aula y hora."""
+        por_dia = {}
+
+        for dia, inicio, fin in espacios:
+            por_dia.setdefault(dia, []).append((inicio, fin))
+
+        for dia in self._priorizar_dias(
+            propuesta,
+            necesidad,
+            espacios,
+        ):
+            for aula in aulas:
+                for inicio, fin in sorted(por_dia[dia]):
+                    yield dia, aula, inicio, fin
 
     @staticmethod
     def _motivos_sin_espacios(necesidad, periodo):
@@ -631,3 +450,98 @@ class GeneradorHorarios:
                         (cursor + duracion).time(),
                     )
                     cursor += paso
+                    
+    def _ubicar_sesiones(
+        self, propuesta, necesidades, sesiones, aulas, paso_minutos
+    ):
+        agregadas = 0
+        diagnosticos = []
+
+        for necesidad in necesidades:
+            espacios = list(
+                self._espacios_posibles(
+                    necesidad, propuesta.periodo, paso_minutos
+                )
+            )
+            aulas_ordenadas = sorted(
+                aulas,
+                key=lambda aula: (
+                    necesidad.prefiere_laboratorio
+                    and aula.tipo != Aula.Tipo.LABORATORIO,
+                    aula.codigo,
+                ),
+            )
+
+            for numero in sesiones[necesidad.pk]:
+                intentos = 0
+                errores = Counter()
+
+                for dia, aula, inicio, fin in self._candidatos_ordenados(
+                    propuesta, necesidad, espacios, aulas_ordenadas
+                ):
+                    bloque = BloquePropuesta(
+                        propuesta=propuesta,
+                        necesidad=necesidad,
+                        numero_sesion=numero,
+                        aula=aula,
+                        dia=dia,
+                        hora_inicio=inicio,
+                        hora_fin=fin,
+                    )
+                    intentos += 1
+
+                    try:
+                        with transaction.atomic():
+                            bloque.full_clean()
+                            bloque.save()
+                            propuesta.validar_bloques()
+                    except ValidationError as error:
+                        prefijo = f"Bloque #{bloque.pk}: "
+                        for mensaje in error.messages:
+                            if bloque.pk and mensaje.startswith(prefijo):
+                                mensaje = "Clase candidata: " + mensaje[len(prefijo):]
+                            errores[mensaje] += 1
+                        continue
+
+                    agregadas += 1
+                    break
+                else:
+                    motivos = []
+
+                    if not aulas_ordenadas:
+                        motivos.append({
+                            "mensaje": "No hay aulas activas.",
+                            "veces": 0,
+                        })
+
+                    if not espacios:
+                        motivos.extend(
+                            {"mensaje": mensaje, "veces": 0}
+                            for mensaje in self._motivos_sin_espacios(
+                                necesidad, propuesta.periodo
+                            )
+                        )
+
+                    motivos.extend(
+                        {"mensaje": mensaje, "veces": cantidad}
+                        for mensaje, cantidad in errores.most_common(5)
+                    )
+
+                    if not motivos:
+                        motivos.append({
+                            "mensaje": (
+                                "No se encontró una ubicación con el orden "
+                                "y paso de búsqueda utilizados."
+                            ),
+                            "veces": 0,
+                        })
+
+                    diagnosticos.append({
+                        "necesidad_id": necesidad.pk,
+                        "numero_sesion": numero,
+                        "descripcion": str(necesidad),
+                        "intentos": intentos,
+                        "motivos": motivos,
+                    })
+
+        return agregadas, diagnosticos

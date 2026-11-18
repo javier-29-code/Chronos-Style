@@ -20,9 +20,12 @@ from .models import (
     FranjaPlanificacion,
     Horario,
     NecesidadClase,
+    BloquePropuesta
 )
 
 from django.urls import reverse
+
+from collections import Counter
 
 class FranjasParaleloTests(TestCase):
     @classmethod
@@ -552,3 +555,125 @@ class FranjasParaleloTests(TestCase):
             time(14),
             time(15),
         ).validar_para_propuesta()
+        
+    def necesidad_para_balanceo(self, codigo):
+        asignatura = Asignatura.objects.create(
+            codigo=codigo,
+            nombre=f"Asignatura {codigo}",
+        )
+
+        return NecesidadClase.objects.create(
+            asignatura=asignatura,
+            docente=self.docente,
+            paralelo=self.paralelo,
+            sesiones_semanales=1,
+            duracion_minutos=60,
+        )
+
+    def generar_para_balanceo(self, necesidades):
+        return GeneradorHorarios().generar(
+            usuario=self.actor,
+            nombre="Propuesta equilibrada",
+            periodo_id=self.periodo.pk,
+            necesidades_ids=[
+                necesidad.pk for necesidad in necesidades
+            ],
+        )
+
+    def test_balanceo_reparte_asignaturas_entre_dias(self):
+        segunda = self.necesidad_para_balanceo("BAL-2")
+        tercera = self.necesidad_para_balanceo("BAL-3")
+
+        resultado = self.generar_para_balanceo(
+            [self.necesidad, segunda, tercera]
+        )
+
+        carga = Counter(
+            resultado["propuesta"].bloques.values_list(
+                "dia",
+                flat=True,
+            )
+        )
+
+        self.assertFalse(resultado["pendientes"])
+        self.assertEqual(sorted(carga.values()), [1, 2])
+
+    def test_balanceo_considera_horarios_oficiales(self):
+        Horario.objects.create(
+            asignatura=self.asignatura,
+            docente=self.docente,
+            aula=self.aula,
+            paralelo=self.paralelo,
+            dia=Horario.Dia.LUNES,
+            hora_inicio=time(8),
+            hora_fin=time(9),
+        )
+
+        otra = self.necesidad_para_balanceo("BAL-OFICIAL")
+        resultado = self.generar_para_balanceo([otra])
+
+        self.assertFalse(resultado["pendientes"])
+        self.assertEqual(
+            resultado["propuesta"].bloques.get().dia,
+            Horario.Dia.MARTES,
+        )
+
+    def test_balanceo_permite_mismo_dia_si_no_hay_alternativa(self):
+        DisponibilidadDocente.objects.filter(
+            docente=self.docente,
+            periodo=self.periodo,
+            dia=Horario.Dia.MARTES,
+        ).update(activo=False)
+
+        self.necesidad.sesiones_semanales = 2
+        self.necesidad.save(update_fields=["sesiones_semanales"])
+
+        resultado = self.generar_para_balanceo([self.necesidad])
+
+        self.assertFalse(resultado["pendientes"])
+        self.assertEqual(
+            resultado["propuesta"].bloques.count(),
+            2,
+        )
+        self.assertEqual(
+            set(
+                resultado["propuesta"].bloques.values_list(
+                    "dia",
+                    flat=True,
+                )
+            ),
+            {Horario.Dia.LUNES},
+        )
+
+    def test_balanceo_reintento_respeta_carga_y_conserva_bloque(self):
+        propuesta = self.propuesta_pendiente_para_reintento()
+        otra = self.necesidad_para_balanceo("BAL-REINTENTO")
+        propuesta.necesidades.add(otra)
+
+        original = BloquePropuesta.objects.create(
+            propuesta=propuesta,
+            necesidad=otra,
+            numero_sesion=1,
+            aula=self.aula,
+            dia=Horario.Dia.LUNES,
+            hora_inicio=time(7),
+            hora_fin=time(8),
+        )
+
+        resultado = GeneradorHorarios().reintentar(
+            usuario=self.actor,
+            propuesta_id=propuesta.pk,
+        )
+
+        original.refresh_from_db()
+        nuevo = propuesta.bloques.get(
+            necesidad=self.necesidad,
+        )
+
+        self.assertFalse(resultado["pendientes"])
+        self.assertEqual(resultado["agregadas"], 1)
+        self.assertEqual(nuevo.dia, Horario.Dia.MARTES)
+        self.assertEqual(original.dia, Horario.Dia.LUNES)
+        self.assertEqual(original.hora_inicio, time(7))
+        self.assertEqual(original.hora_fin, time(8))
+        self.assertEqual(original.aula_id, self.aula.pk)
