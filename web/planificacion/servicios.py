@@ -1,6 +1,7 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
+from .eventos_horario import horario_publicado, publicacion_retirada
 from .models import Horario, PropuestaHorario, BloquePropuesta,RetiradaPublicacion
 
 from django.utils import timezone
@@ -142,6 +143,7 @@ def aprobar_propuesta(*, usuario, propuesta_id):
         ],
     )
 
+    horario_publicado.send(sender=PropuestaHorario, propuesta=propuesta)
     return propuesta
 
 @transaction.atomic
@@ -297,6 +299,7 @@ def retirar_publicacion(*, usuario, propuesta_id, motivo):
         ],
     )
 
+    publicacion_retirada.send(sender=PropuestaHorario, propuesta=propuesta)
     return propuesta
 
 @transaction.atomic

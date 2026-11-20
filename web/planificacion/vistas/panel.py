@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
 from academico.models import PeriodoAcademico
-from ..models import Horario, PropuestaHorario
+from ..models import AvisoHorario, Horario, PropuestaHorario
 from ..formularios_web import FiltroHorarioForm
 from ..calendario import CalendarioSemanal
 
@@ -83,6 +83,16 @@ def inicio(request):
 
     es_impresion = request.GET.get("imprimir") == "1"
 
+    avisos_horario = ()
+    if not es_impresion:
+        propuestas_visibles = autorizados.order_by().values(
+            "bloque_origen__propuesta_id"
+        )
+        avisos_horario = AvisoHorario.objects.filter(
+            destinatario=usuario,
+            propuesta_id__in=propuestas_visibles,
+        ).select_related("propuesta__periodo")[:5]
+
     consulta_impresion = datos.copy()
     consulta_impresion["imprimir"] = "1"
 
@@ -133,6 +143,7 @@ def inicio(request):
                 horario.aula_id for horario in registros
             }),
             "propuestas": propuestas,
+            "avisos_horario": avisos_horario,
             "puede_ver_todos": puede_ver_todos,
             "puede_ver_propuestas": puede_ver_propuestas,
             

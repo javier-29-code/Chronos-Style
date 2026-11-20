@@ -11,10 +11,12 @@ from academico.models import (
     Paralelo,
     Asignatura,
     Aula,
+    Inscripcion,
 )
-from usuarios.models import PerfilDocente
+from usuarios.models import PerfilDocente, PerfilEstudiante
 
 from .models import (
+    AvisoHorario,
     Horario,
     NecesidadClase,
     PropuestaHorario,
@@ -443,6 +445,59 @@ class BloquePropuestaTests(TestCase):
             set(self.propuesta.bloques.values_list("pk", flat=True)),
         )
         self.assertEqual(Horario.objects.count(), 2)
+
+    def test_publicacion_muestra_avisos_solo_a_las_cuentas_afectadas(self):
+        coordinador = self._preparar_propuesta_completa()
+        paralelo = self.necesidad.paralelo
+        docente = self.necesidad.docente.usuario
+        estudiante = get_user_model().objects.create_user(username="inscrito")
+        inactivo = get_user_model().objects.create_user(
+            username="inscrito_inactivo",
+            is_active=False,
+        )
+        ajeno = get_user_model().objects.create_user(username="fuera_del_paralelo")
+
+        # Una misma cuenta puede ser destinataria por ambos perfiles.
+        for cuenta in (docente, estudiante, inactivo):
+            perfil = PerfilEstudiante.objects.create(
+                usuario=cuenta, programa=paralelo.programa, semestre=3,
+            )
+            Inscripcion.objects.create(estudiante=perfil, paralelo=paralelo)
+
+        enviar_propuesta_revision(usuario=coordinador, propuesta_id=self.propuesta.pk)
+        self.assertFalse(AvisoHorario.objects.exists())
+        aprobar_propuesta(usuario=coordinador, propuesta_id=self.propuesta.pk)
+
+        self.assertCountEqual(
+            self.propuesta.avisos_publicacion.values_list("destinatario_id", flat=True),
+            [docente.pk, estudiante.pk],
+        )
+        inicio = reverse("planificacion_web:inicio")
+        self.client.force_login(estudiante)
+        self.assertContains(self.client.get(inicio), "Avisos de horario")
+        self.assertContains(
+            self.client.get(inicio), f"{inicio}?periodo={self.periodo.pk}#horario",
+        )
+        self.assertNotContains(
+            self.client.get(inicio, {"imprimir": 1}), "Avisos de horario",
+        )
+        self.client.force_login(ajeno)
+        self.assertNotContains(self.client.get(inicio), "Avisos de horario")
+
+    def test_reversion_de_publicacion_tambien_revierte_los_avisos(self):
+        usuario = self._preparar_propuesta_completa()
+        enviar_propuesta_revision(usuario=usuario, propuesta_id=self.propuesta.pk)
+
+        with self.assertRaisesMessage(ValidationError, "Reversión de prueba"):
+            with transaction.atomic():
+                aprobar_propuesta(usuario=usuario, propuesta_id=self.propuesta.pk)
+                self.assertTrue(self.propuesta.avisos_publicacion.exists())
+                raise ValidationError("Reversión de prueba")
+
+        self.propuesta.refresh_from_db()
+        self.assertEqual(self.propuesta.estado, PropuestaHorario.Estado.EN_REVISION)
+        self.assertFalse(Horario.objects.exists())
+        self.assertFalse(AvisoHorario.objects.exists())
 
     def test_revision_y_aprobacion_exigen_permisos(self):
         autorizado = self._preparar_propuesta_completa()
@@ -1149,6 +1204,7 @@ class BloquePropuestaTests(TestCase):
 
     def test_retira_publicacion_conservando_borrador_y_registro(self):
         usuario = self._publicacion_para_corregir()
+        self.assertTrue(self.propuesta.avisos_publicacion.exists())
 
         retirar_publicacion(
             usuario=usuario,
@@ -1164,6 +1220,7 @@ class BloquePropuestaTests(TestCase):
         self.assertEqual(Horario.objects.count(), 0)
         self.assertEqual(self.propuesta.bloques.count(), 2)
         self.assertIsNone(self.propuesta.aprobada_en)
+        self.assertFalse(self.propuesta.avisos_publicacion.exists())
 
         registro = self.propuesta.retiradas.get()
         self.assertEqual(registro.usuario_id, usuario.pk)

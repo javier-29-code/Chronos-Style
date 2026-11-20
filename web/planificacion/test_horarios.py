@@ -26,6 +26,7 @@ from .servicios import (
     actualizar_horario,
     eliminar_horario,
 )
+from .validaciones_paralelo import ValidadorFranjaParalelo
 
 from django.urls import reverse
 
@@ -613,6 +614,16 @@ class HorarioTests(TestCase):
         self.horario().validar_para_propuesta()
 
         self.assertEqual(Horario.objects.count(), 0)
+
+    def test_propuesta_detiene_la_cadena_si_los_datos_son_invalidos(self):
+        candidato = self.horario(hora_fin=time(7))
+
+        with patch.object(ValidadorFranjaParalelo, "validar") as validar_franja:
+            with self.assertRaises(ValidationError) as resultado:
+                candidato.validar_para_propuesta()
+
+        self.assertIn("hora_fin", resultado.exception.message_dict)
+        validar_franja.assert_not_called()
 
     def test_propuesta_rechaza_falta_de_franja(self):
         DisponibilidadDocente.objects.create(

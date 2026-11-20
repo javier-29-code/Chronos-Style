@@ -223,6 +223,14 @@ resultado.
   su alcance, incorpora cada bloque y guarda el diagnóstico.
   `GeneradorHorarios` dirige la búsqueda y usa el mismo constructor para
   añadir sesiones pendientes a una propuesta existente.
+- **Chain of Responsibility.** `validaciones_horario.py` encadena las
+  comprobaciones de datos, cruces, franjas, catálogo, día del periodo y
+  disponibilidad. La generación, la edición y la publicación pasan por
+  la misma cadena de horarios propuestos.
+- **Observer.** Al publicar, el servicio emite `horario_publicado`, y
+  un receptor registra avisos internos para los docentes y estudiantes
+  afectados. Los avisos aparecen en Inicio y se quitan al retirar la
+  publicación. Ambos cambios forman parte de la transacción del horario.
 
 ## Pruebas y comprobaciones
 
@@ -241,7 +249,7 @@ Para ejecutar las pruebas de franjas por paralelo y reintentos:
 ```
 
 La última ejecución completa reportada durante el desarrollo
-finalizó con 245 pruebas correctas.
+finalizó con 248 pruebas correctas.
 
 ## Configuración
 

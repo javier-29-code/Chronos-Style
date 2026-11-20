@@ -11,10 +11,10 @@ from django.conf import settings
 
 from academico.models import Aula
 
-from .validaciones_paralelo import ValidadorFranjaParalelo
-
-from .disponibilidad_efectiva import DisponibilidadDocenteEfectiva
 from .estados_propuesta import Aprobada, Borrador, EnRevision, EstadoPropuesta
+from .validaciones_horario import VALIDACION_HORARIO_PROPUESTO
+
+
 class Horario(models.Model):
     """Clase semanal de un grupo durante su periodo académico."""
 
@@ -277,73 +277,7 @@ class Horario(models.Model):
                 
     def validar_para_propuesta(self):
         """Valida el candidato sin guardarlo."""
-        self.full_clean()
-        ValidadorFranjaParalelo.validar(self)
-
-        if not self.asignatura.activo:
-            raise ValidationError({
-                "asignatura": (
-                    "La asignatura está retirada del catálogo activo."
-                ),
-            })
-
-        if not self.docente.activo:
-            raise ValidationError({
-                "docente": "El docente está retirado del catálogo activo.",
-            })
-
-        if not self.aula.activo:
-            raise ValidationError({
-                "aula": "El aula está retirada del catálogo activo.",
-            })
-            
-        periodo = self.paralelo.periodo
-
-        primera_fecha = periodo.fecha_inicio + timedelta(
-            days=(
-                self.dia - periodo.fecha_inicio.isoweekday()
-            ) % 7,
-        )
-
-        if primera_fecha > periodo.fecha_fin:
-            raise ValidationError({
-                "dia": "El periodo no contiene ninguna fecha de ese día.",
-            })
-
-        franjas = FranjaPlanificacion.objects.filter(
-            periodo=periodo,
-            dia=self.dia,
-            activo=True,
-        )
-        disponibilidades = DisponibilidadDocenteEfectiva.obtener(
-            docente_id=self.docente_id,
-            periodo_id=periodo.pk,
-        )[self.dia]
-
-        errores = {}
-
-        if not self._cubre_intervalo(
-            franjas,
-            self.hora_inicio,
-            self.hora_fin,
-        ):
-            errores["hora_inicio"] = (
-                "La clase no cabe completamente en las franjas "
-                "de planificación activas."
-            )
-
-        if not self._cubre_intervalo(
-            disponibilidades,
-            self.hora_inicio,
-            self.hora_fin,
-        ):
-            errores["docente"] = (
-                "El docente no tiene disponibilidad activa "
-                "para todo el intervalo."
-            )
-
-        if errores:
-            raise ValidationError(errores)
+        VALIDACION_HORARIO_PROPUESTO.validar(self)
 
     @staticmethod
     def _cubre_intervalo(ventanas, inicio, fin):
@@ -1149,3 +1083,30 @@ class RetiradaPublicacion(models.Model):
 
     def __str__(self):
         return f"Propuesta #{self.propuesta_id} · {self.fecha}"
+
+
+class AvisoHorario(models.Model):
+    """Aviso interno de una publicación para una cuenta afectada."""
+
+    propuesta = models.ForeignKey(
+        PropuestaHorario,
+        on_delete=models.CASCADE,
+        related_name="avisos_publicacion",
+    )
+    destinatario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="avisos_horario",
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-creado_en", "-pk")
+        verbose_name = "aviso de horario"
+        verbose_name_plural = "avisos de horario"
+        constraints = [
+            models.UniqueConstraint(
+                fields=("destinatario", "propuesta"),
+                name="aviso_unico_destinatario_propuesta",
+            ),
+        ]
