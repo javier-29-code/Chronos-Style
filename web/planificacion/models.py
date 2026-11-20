@@ -14,6 +14,7 @@ from academico.models import Aula
 from .validaciones_paralelo import ValidadorFranjaParalelo
 
 from .disponibilidad_efectiva import DisponibilidadDocenteEfectiva
+from .estados_propuesta import Aprobada, Borrador, EnRevision, EstadoPropuesta
 class Horario(models.Model):
     """Clase semanal de un grupo durante su periodo académico."""
 
@@ -703,6 +704,13 @@ class PropuestaHorario(models.Model):
         APROBADA = "APROBADA", "Aprobada"
         RECHAZADA = "RECHAZADA", "Rechazada"
 
+    _ESTADOS = {
+        Estado.BORRADOR: Borrador(),
+        Estado.EN_REVISION: EnRevision(),
+        Estado.APROBADA: Aprobada(),
+        Estado.RECHAZADA: EstadoPropuesta(),
+    }
+
     nombre = models.CharField(max_length=150)
     periodo = models.ForeignKey(
         "academico.PeriodoAcademico",
@@ -776,6 +784,10 @@ class PropuestaHorario(models.Model):
                 name="propuesta_estado_valido",
             ),
         ]
+
+    @property
+    def estado_actual(self):
+        return self._ESTADOS[self.estado]
 
     def clean(self):
         super().clean()

@@ -5,6 +5,7 @@ from django.db import transaction
 
 from academico.models import Aula, PeriodoAcademico
 
+from .constructor_propuesta import ConstructorPropuestaHorario
 from .models import (
     Horario,
     NecesidadClase,
@@ -79,14 +80,12 @@ class GeneradorHorarios:
                 "o relacionadas con registros inactivos."
             )
 
-        propuesta = PropuestaHorario(
+        constructor = ConstructorPropuestaHorario.iniciar(
             nombre=nombre,
             periodo=periodo,
             autor=usuario,
+            necesidades=necesidades,
         )
-        propuesta.full_clean()
-        propuesta.save()
-        propuesta.necesidades.set(necesidades)
 
         aulas = list(
             Aula.objects.filter(activo=True).order_by("codigo")
@@ -97,14 +96,13 @@ class GeneradorHorarios:
             for necesidad in necesidades
         }
         _, diagnosticos = self._ubicar_sesiones(
-            propuesta, necesidades, sesiones, aulas, paso_minutos
+            constructor, necesidades, sesiones, aulas, paso_minutos
         )
 
-        propuesta.diagnostico_generacion = {
+        propuesta = constructor.finalizar({
             "paso_minutos": paso_minutos,
             "sesiones": diagnosticos,
-        }
-        propuesta.save(update_fields=["diagnostico_generacion"])
+        })
 
         avisos = []
 
@@ -161,10 +159,9 @@ class GeneradorHorarios:
                 "No tienes acceso a esta propuesta."
             )
 
-        if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
-            raise ValidationError(
-                "Solo se pueden reintentar propuestas en borrador."
-            )
+        propuesta.estado_actual.exigir_edicion(
+            "Solo se pueden reintentar propuestas en borrador."
+        )
 
         propuesta.full_clean()
         pendientes = propuesta.obtener_pendientes()
@@ -212,20 +209,18 @@ class GeneradorHorarios:
             Aula.objects.filter(activo=True).order_by("codigo")
         )
 
+        constructor = ConstructorPropuestaHorario(propuesta)
         agregadas, diagnosticos = self._ubicar_sesiones(
-            propuesta, necesidades, sesiones_faltantes, aulas, paso_minutos
+            constructor, necesidades, sesiones_faltantes, aulas, paso_minutos
         )
 
-        propuesta.diagnostico_generacion = {
-            "tipo": "reintento",
-            "paso_minutos": paso_minutos,
-            "sesiones": diagnosticos,
-        }
-        propuesta.save(
-            update_fields=[
-                "diagnostico_generacion",
-                "actualizada_en",
-            ]
+        propuesta = constructor.finalizar(
+            {
+                "tipo": "reintento",
+                "paso_minutos": paso_minutos,
+                "sesiones": diagnosticos,
+            },
+            actualizar_fecha=True,
         )
 
         return {
@@ -455,8 +450,9 @@ class GeneradorHorarios:
                     cursor += paso
 
     def _ubicar_sesiones(
-        self, propuesta, necesidades, sesiones, aulas, paso_minutos
+        self, constructor, necesidades, sesiones, aulas, paso_minutos
     ):
+        propuesta = constructor.propuesta
         agregadas = 0
         diagnosticos = []
 
@@ -480,7 +476,6 @@ class GeneradorHorarios:
                     propuesta, necesidad, espacios, aulas_candidatas
                 ):
                     bloque = BloquePropuesta(
-                        propuesta=propuesta,
                         necesidad=necesidad,
                         numero_sesion=numero,
                         aula=aula,
@@ -491,10 +486,7 @@ class GeneradorHorarios:
                     intentos += 1
 
                     try:
-                        with transaction.atomic():
-                            bloque.full_clean()
-                            bloque.save()
-                            propuesta.validar_bloques()
+                        constructor.incorporar_bloque(bloque)
                     except ValidationError as error:
                         prefijo = f"Bloque #{bloque.pk}: "
                         for mensaje in error.messages:

@@ -150,7 +150,7 @@ def detalle_propuesta(request, propuesta_id):
         horarios_calendario, fin_minimo=20 * 60
     )
     puede_mover = (
-        propuesta.estado == PropuestaHorario.Estado.BORRADOR
+        propuesta.estado_actual.permite_editar
         and request.user.has_perm("planificacion.change_bloquepropuesta")
     )
 
@@ -308,7 +308,7 @@ def editar_bloque_web(request, propuesta_id, bloque_id):
         propuesta=propuesta,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
+    if not propuesta.estado_actual.permite_editar:
         messages.error(
             request,
             "Solo se pueden editar propuestas en borrador.",
@@ -360,7 +360,7 @@ def mover_bloque_web(request, propuesta_id, bloque_id):
         pk=bloque_id,
         propuesta=propuesta,
     )
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
+    if not propuesta.estado_actual.permite_editar:
         return JsonResponse(
             {"errores": ["Solo se pueden mover bloques en borradores."]},
             status=409,
@@ -441,7 +441,7 @@ def retirar_publicacion_web(request, propuesta_id):
         propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.APROBADA:
+    if not propuesta.estado_actual.permite_retirar:
         messages.error(request, "La propuesta no está aprobada.")
         return redirect(
             "planificacion_web:detalle_propuesta",
@@ -544,7 +544,7 @@ def agregar_sesion_web(request, propuesta_id):
         propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
+    if not propuesta.estado_actual.permite_editar:
         messages.error(
             request,
             "Solo se pueden añadir sesiones a un borrador.",

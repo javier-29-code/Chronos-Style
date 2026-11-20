@@ -92,14 +92,7 @@ def enviar_propuesta_revision(*, usuario, propuesta_id):
         pk=propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
-        raise ValidationError(
-            "Solo se puede enviar a revisión una propuesta en borrador."
-        )
-
-    propuesta.validar_completa()
-
-    propuesta.estado = PropuestaHorario.Estado.EN_REVISION
+    propuesta.estado = propuesta.estado_actual.enviar_a_revision(propuesta)
     propuesta.save(
         update_fields=["estado", "actualizada_en"],
     )
@@ -118,14 +111,7 @@ def aprobar_propuesta(*, usuario, propuesta_id):
         pk=propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.EN_REVISION:
-        raise ValidationError(
-            "Solo se puede aprobar una propuesta en revisión."
-        )
-
-    # Puede haber nuevos horarios o cambios de disponibilidad
-    # desde que se envió la propuesta.
-    propuesta.validar_completa()
+    siguiente_estado = propuesta.estado_actual.aprobar(propuesta)
 
     bloques = propuesta.bloques.select_related(
         "necesidad__asignatura",
@@ -143,7 +129,7 @@ def aprobar_propuesta(*, usuario, propuesta_id):
         horario.validar_para_propuesta()
         horario.save()
 
-    propuesta.estado = PropuestaHorario.Estado.APROBADA
+    propuesta.estado = siguiente_estado
     propuesta.aprobada_por = usuario
     propuesta.aprobada_en = timezone.now()
     propuesta.full_clean()
@@ -192,10 +178,9 @@ def editar_bloque_propuesta(*, usuario, bloque_id, **cambios):
             "No puedes acceder a esta propuesta."
         )
 
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
-        raise ValidationError(
-            "Solo se pueden editar propuestas en borrador."
-        )
+    propuesta.estado_actual.exigir_edicion(
+        "Solo se pueden editar propuestas en borrador."
+    )
 
     bloque = BloquePropuesta.objects.select_for_update().get(
         pk=bloque_id,
@@ -231,12 +216,7 @@ def devolver_propuesta_borrador(*, usuario, propuesta_id):
         pk=propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.EN_REVISION:
-        raise ValidationError(
-            "Solo se pueden devolver propuestas en revisión."
-        )
-
-    propuesta.estado = PropuestaHorario.Estado.BORRADOR
+    propuesta.estado = propuesta.estado_actual.devolver_a_borrador(propuesta)
     propuesta.save(
         update_fields=["estado", "actualizada_en"],
     )
@@ -263,10 +243,7 @@ def retirar_publicacion(*, usuario, propuesta_id, motivo):
         pk=propuesta_id,
     )
 
-    if propuesta.estado != PropuestaHorario.Estado.APROBADA:
-        raise ValidationError(
-            "Solo se puede retirar una propuesta aprobada."
-        )
+    siguiente_estado = propuesta.estado_actual.retirar_publicacion(propuesta)
 
     horarios = list(
         Horario.objects.select_for_update()
@@ -308,7 +285,7 @@ def retirar_publicacion(*, usuario, propuesta_id, motivo):
         pk__in=[horario.pk for horario in horarios]
     ).delete()
 
-    propuesta.estado = PropuestaHorario.Estado.BORRADOR
+    propuesta.estado = siguiente_estado
     propuesta.aprobada_por = None
     propuesta.aprobada_en = None
     propuesta.save(
@@ -352,10 +329,9 @@ def agregar_sesion_pendiente(
             "No puedes acceder a esta propuesta."
         )
 
-    if propuesta.estado != PropuestaHorario.Estado.BORRADOR:
-        raise ValidationError(
-            "Solo se pueden añadir sesiones a un borrador."
-        )
+    propuesta.estado_actual.exigir_edicion(
+        "Solo se pueden añadir sesiones a un borrador."
+    )
 
     necesidad = (
         propuesta.necesidades

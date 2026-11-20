@@ -489,6 +489,20 @@ class BloquePropuestaTests(TestCase):
 
         self.assertEqual(Horario.objects.count(), 0)
 
+    def test_propuesta_rechazada_conserva_su_estado(self):
+        usuario = self._preparar_propuesta_completa()
+        self.propuesta.estado = PropuestaHorario.Estado.RECHAZADA
+        self.propuesta.save(update_fields=["estado"])
+
+        for operacion in (enviar_propuesta_revision, aprobar_propuesta):
+            with self.subTest(operacion=operacion.__name__):
+                with self.assertRaises(ValidationError):
+                    operacion(usuario=usuario, propuesta_id=self.propuesta.pk)
+
+        self.propuesta.refresh_from_db()
+        self.assertEqual(self.propuesta.estado, PropuestaHorario.Estado.RECHAZADA)
+        self.assertFalse(Horario.objects.exists())
+
     def test_no_publica_dos_veces_la_misma_propuesta(self):
         usuario = self._preparar_propuesta_completa()
 
@@ -606,6 +620,26 @@ class BloquePropuestaTests(TestCase):
             periodo_id=self.periodo.pk,
             necesidades_ids=[self.necesidad.pk],
         )
+
+    def test_fallo_al_guardar_diagnostico_revierte_el_borrador_y_sus_bloques(self):
+        usuario = self._usuario_generador()
+        self._crear_ventanas()
+        guardar_original = PropuestaHorario.save
+        propuestas_antes = PropuestaHorario.objects.count()
+        bloques_antes = BloquePropuesta.objects.count()
+
+        def guardar_con_fallo(propuesta, *args, **kwargs):
+            if propuesta.diagnostico_generacion:
+                self.assertTrue(propuesta.bloques.exists())
+                raise RuntimeError("Fallo simulado al guardar el diagnóstico.")
+            return guardar_original(propuesta, *args, **kwargs)
+
+        with patch.object(PropuestaHorario, "save", new=guardar_con_fallo):
+            with self.assertRaisesRegex(RuntimeError, "Fallo simulado"):
+                self._generar(usuario)
+
+        self.assertEqual(PropuestaHorario.objects.count(), propuestas_antes)
+        self.assertEqual(BloquePropuesta.objects.count(), bloques_antes)
 
     def test_generador_crea_borrador_y_permite_aula_comun(self):
         self._crear_ventanas()

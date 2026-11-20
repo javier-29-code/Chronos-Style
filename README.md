@@ -213,6 +213,17 @@ Reintentar pendientes:
 Si las condiciones no cambian, un reintento puede producir el mismo
 resultado.
 
+## Patrones de diseño
+
+- **State.** `PropuestaHorario.estado_actual` selecciona el objeto que
+  aplica las reglas de edición y transición de borrador, revisión o
+  aprobación. Los servicios conservan los permisos y ejecutan cada
+  operación dentro de una transacción.
+- **Builder.** `ConstructorPropuestaHorario` prepara el borrador y
+  su alcance, incorpora cada bloque y guarda el diagnóstico.
+  `GeneradorHorarios` dirige la búsqueda y usa el mismo constructor para
+  añadir sesiones pendientes a una propuesta existente.
+
 ## Pruebas y comprobaciones
 
 Desde la carpeta `web`:
@@ -230,7 +241,7 @@ Para ejecutar las pruebas de franjas por paralelo y reintentos:
 ```
 
 La última ejecución completa reportada durante el desarrollo
-finalizó con 228 pruebas correctas.
+finalizó con 245 pruebas correctas.
 
 ## Configuración
 
