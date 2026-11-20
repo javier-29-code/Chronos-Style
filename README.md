@@ -25,6 +25,7 @@ migrado de una aplicación de escritorio con Tkinter a una aplicación web.
 - Consulta de horarios oficiales mediante un calendario semanal.
 - Filtros por periodo, docente, aula y Paralelo/Curso.
 - Vista de impresión y guardado como PDF desde el navegador.
+- Descarga del horario oficial filtrado en formato iCalendar (`.ics`).
 - Comando para cargar datos ficticios de demostración.
 
 La preferencia por laboratorio es flexible: el generador puede asignar
@@ -231,6 +232,11 @@ resultado.
   un receptor registra avisos internos para los docentes y estudiantes
   afectados. Los avisos aparecen en Inicio y se quitan al retirar la
   publicación. Ambos cambios forman parte de la transacción del horario.
+- **Adapter.** `HorarioAEventoCalendario` convierte cada `Horario`
+  visible en un `EventoCalendario` con las fechas y repeticiones del
+  periodo. El exportador `.ics` trabaja con esos eventos. En **Inicio →
+  Horario semanal**, el botón **Descargar calendario (.ics)** respeta los
+  filtros y los permisos del usuario.
 
 ## Pruebas y comprobaciones
 
@@ -249,7 +255,7 @@ Para ejecutar las pruebas de franjas por paralelo y reintentos:
 ```
 
 La última ejecución completa reportada durante el desarrollo
-finalizó con 248 pruebas correctas.
+finalizó con 252 pruebas correctas.
 
 ## Configuración
 

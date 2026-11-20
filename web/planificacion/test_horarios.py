@@ -826,6 +826,77 @@ class HorarioTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(respuesta.context["total_bloques"], 0)
 
+    def test_exportacion_ics_respeta_filtros_y_fechas_del_periodo(self):
+        self.periodo.fecha_fin = date(2026, 10, 19)
+        self.periodo.save()
+        primero, segundo = self._crear_horarios_para_filtros()
+        self.client.force_login(self._usuario_con_permisos("view_horario"))
+        url = reverse("planificacion_web:inicio")
+        filtros = {"periodo": self.periodo.pk, "aula": primero.aula_id}
+        pagina = self.client.get(url, filtros)
+        self.assertContains(pagina, "Descargar calendario (.ics)")
+        self.assertIn(f"aula={primero.aula_id}", pagina.context["consulta_exportacion"])
+
+        respuesta = self.client.get(url, {**filtros, "exportar": "ics"})
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta["Content-Type"], "text/calendar; charset=utf-8")
+        self.assertIn("horario-chronos.ics", respuesta["Content-Disposition"])
+        self.assertIn("private", respuesta["Cache-Control"])
+        self.assertEqual(respuesta.content.count(b"BEGIN:VEVENT\r\n"), 1)
+        self.assertContains(respuesta, "DTSTART:20261005T130000Z")
+        self.assertContains(respuesta, "DTEND:20261005T150000Z")
+        self.assertContains(respuesta, "RRULE:FREQ=WEEKLY;COUNT=3")
+        self.assertContains(respuesta, primero.aula.codigo)
+        self.assertNotContains(respuesta, segundo.aula.codigo)
+
+    def test_exportacion_ics_solo_incluye_las_clases_visibles_al_estudiante(self):
+        primero, segundo = self._crear_horarios_para_filtros()
+        cuenta = get_user_model().objects.create_user(username="estudiante_ics")
+        estudiante = PerfilEstudiante.objects.create(
+            usuario=cuenta, programa=self.paralelo.programa, semestre=3,
+        )
+        Inscripcion.objects.create(estudiante=estudiante, paralelo=primero.paralelo)
+        url = reverse("planificacion_web:inicio")
+        datos = {"periodo": self.periodo.pk, "exportar": "ics"}
+
+        self.assertEqual(self.client.get(url, datos).status_code, 302)
+        self.client.force_login(cuenta)
+        respuesta = self.client.get(url, datos)
+        self.assertEqual(respuesta.content.count(b"BEGIN:VEVENT\r\n"), 1)
+        self.assertContains(respuesta, primero.aula.codigo)
+        self.assertNotContains(respuesta, segundo.aula.codigo)
+        respuesta_ajena = self.client.get(url, {**datos, "aula": segundo.aula_id})
+        self.assertEqual(respuesta_ajena.status_code, 400)
+        self.assertNotContains(respuesta_ajena, segundo.aula.codigo, status_code=400)
+
+    def test_exportacion_ics_escapa_texto_y_conserva_utf8(self):
+        self.horario().save()
+        self.asignatura.nombre = "Á" * 45 + ", Redes; prácticas\\Taller"
+        self.asignatura.save()
+        self.client.force_login(self.docente.usuario)
+        respuesta = self.client.get(reverse("planificacion_web:inicio"), {"exportar": "ics"})
+        self.assertEqual(respuesta.status_code, 200)
+
+        for linea in respuesta.content.split(b"\r\n"):
+            self.assertLessEqual(len(linea), 75)
+            linea.decode("utf-8")
+        texto = respuesta.content.replace(b"\r\n ", b"").decode("utf-8")
+        esperado = "SUMMARY:" + "Á" * 45 + r"\, Redes\; prácticas\\Taller"
+        self.assertIn(esperado + "\r\n", texto)
+        self.assertIn(r"DESCRIPTION:Paralelo TERCERO A\nDocente", texto)
+
+    def test_exportacion_ics_sin_clases_devuelve_404(self):
+        primero, segundo = self._crear_horarios_para_filtros()
+        self.client.force_login(self._usuario_con_permisos("view_horario"))
+        respuesta = self.client.get(
+            reverse("planificacion_web:inicio"),
+            {
+                "periodo": self.periodo.pk, "docente": primero.docente_id,
+                "aula": segundo.aula_id, "exportar": "ics",
+            },
+        )
+        self.assertEqual(respuesta.status_code, 404)
+
     def test_filtro_invalido_muestra_error_sin_fallar(self):
         self._crear_horarios_para_filtros()
 

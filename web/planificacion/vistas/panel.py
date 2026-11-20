@@ -1,7 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
+from django.utils import timezone
+from django.utils.cache import patch_cache_control
+
 from academico.models import PeriodoAcademico
+
+from ..adaptadores_calendario import HorarioAEventoCalendario
+from ..exportacion_ics import exportar_ics
 from ..models import AvisoHorario, Horario, PropuestaHorario
 from ..formularios_web import FiltroHorarioForm
 from ..calendario import CalendarioSemanal
@@ -81,6 +88,11 @@ def inicio(request):
         ).order_by("dia", "hora_inicio", "pk")
     )
 
+    if request.GET.get("exportar") == "ics":
+        if not valido:
+            return HttpResponseBadRequest("Los filtros del horario no son válidos.")
+        return _descargar_ics(registros, dominio=request.get_host())
+
     es_impresion = request.GET.get("imprimir") == "1"
 
     avisos_horario = ()
@@ -95,6 +107,9 @@ def inicio(request):
 
     consulta_impresion = datos.copy()
     consulta_impresion["imprimir"] = "1"
+
+    consulta_exportacion = datos.copy()
+    consulta_exportacion["exportar"] = "ics"
 
     filtros_aplicados = []
 
@@ -151,5 +166,28 @@ def inicio(request):
             "filtros_validos": valido,
             "filtros_aplicados": filtros_aplicados,
             "consulta_impresion": consulta_impresion.urlencode(),
+            "consulta_exportacion": consulta_exportacion.urlencode(),
         },
     )
+
+
+def _descargar_ics(registros, *, dominio):
+    zona_horaria = timezone.get_default_timezone()
+    eventos = []
+    for horario in registros:
+        evento = HorarioAEventoCalendario(horario).como_evento(
+            zona_horaria=zona_horaria,
+            dominio=dominio,
+        )
+        if evento is not None:
+            eventos.append(evento)
+    if not eventos:
+        raise Http404("No hay clases para exportar con estos filtros.")
+
+    respuesta = HttpResponse(
+        exportar_ics(eventos, generado_en=timezone.now()),
+        content_type="text/calendar; charset=utf-8",
+    )
+    respuesta["Content-Disposition"] = 'attachment; filename="horario-chronos.ics"'
+    patch_cache_control(respuesta, private=True, no_store=True)
+    return respuesta

@@ -113,6 +113,10 @@
 
             {% if filtros_validos and total_bloques %}
                 <a class="button-quiet"
+                   href="{% url 'planificacion_web:inicio' %}?{{ consulta_exportacion }}">
+                    Descargar calendario (.ics)
+                </a>
+                <a class="button-quiet"
                    href="{% url 'planificacion_web:inicio' %}?{{ consulta_impresion }}"
                    target="_blank"
                    rel="noopener">
